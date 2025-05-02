@@ -22,3 +22,8 @@ dependencyResolutionManagement {
 rootProject.name = "NiceEljur"
 include(":app")
 include(":common")
+include(":feature_login")
+include(":feature_diary")
+include(":feature_marks")
+include(":feature_messages")
+include(":feature_final_grades")

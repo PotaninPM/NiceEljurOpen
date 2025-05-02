@@ -25,6 +25,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -40,6 +41,13 @@ android {
 }
 
 dependencies {
+    implementation(project(":common"))
+
+    implementation(project(":feature_diary"))
+    implementation(project(":feature_login"))
+    implementation(project(":feature_marks"))
+    implementation(project(":feature_messages"))
+    implementation(project(":feature_final_grades"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
