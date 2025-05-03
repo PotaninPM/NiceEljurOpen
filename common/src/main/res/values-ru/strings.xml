@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diary">Дневник</string>
+    <string name="marks">Оценки</string>
+    <string name="homework">Домашка</string>
+    <string name="messages">Сообщения</string>
+</resources>
