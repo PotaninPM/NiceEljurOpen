@@ -29,10 +29,16 @@ jobs:
       - name: Telegram Success
         if: ${{ success() }}
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            COMMENT="${{ github.event.pull_request.title }}"
+          else
+            COMMENT="${{ github.event.head_commit.message }}"
+          fi
+
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
             -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
             -F document=@"${GITHUB_WORKSPACE}/app/build/outputs/apk/debug/app-debug.apk" \
-            -F caption="Все прошло супер, вот новая дебаг версия 🥵🥵🥵"
+            -F caption="✅ Все прошло супер! Вот новая дебаг‑версия. Комментарий: $COMMENT"
 #          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
 #            -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
 #            -F document=@"${GITHUB_WORKSPACE}/app/build/outputs/apk/release/app-release-unsigned.apk" \
