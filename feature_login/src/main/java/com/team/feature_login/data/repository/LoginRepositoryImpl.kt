@@ -1,7 +1,7 @@
 package com.team.feature_login.data.repository
 
 import com.team.feature_login.data.model.LoginRequest
-import com.team.feature_login.data.model.LoginResponse
+import com.team.feature_login.data.model.TokenResult
 import com.team.feature_login.data.remote.LoginApi
 import com.team.feature_login.domain.repository.LoginRepository
 import javax.inject.Inject
@@ -9,7 +9,7 @@ import javax.inject.Inject
 class LoginRepositoryImpl @Inject constructor(
     private val api: LoginApi
 ) : LoginRepository {
-    override suspend fun login(username: String, password: String): Result<LoginResponse.Response.TokenResult> {
+    override suspend fun login(username: String, password: String): Result<TokenResult> {
         return try {
             val response = api.login(LoginRequest(username, password))
 

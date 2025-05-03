@@ -45,11 +45,11 @@ import com.team.common.components.buttons.CustomButton
 import com.team.common.components.textFields.CustomTextField
 import com.team.common.components.warning.WarningWindow
 import com.team.feature_login.R
-import com.team.feature_login.data.model.LoginResponse
+import com.team.feature_login.data.model.TokenResult
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (LoginResponse.Response.TokenResult?) -> Unit,
+    onLoginSuccess: (TokenResult?) -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
