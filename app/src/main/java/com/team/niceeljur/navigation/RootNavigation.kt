@@ -37,7 +37,11 @@ fun RootNavigation() {
             LoginScreen(
                 navController = rootNavController,
                 onLoginSuccess = {
-                    //rootNavController.navigate(RootNavDestinations.Diary)
+                    rootNavController.navigate(RootNavDestinations.Diary) {
+                        popUpTo(RootNavDestinations.Login) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }
