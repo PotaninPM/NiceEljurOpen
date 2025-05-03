@@ -6,9 +6,9 @@ data class LoginResponse(
     data class Response(
         val state: Int,
         val error: String?,
-        val result: Result?
+        val result: TokenResult?
     ) {
-        data class Result(
+        data class TokenResult(
             val token: String,
             val expires: String
         )

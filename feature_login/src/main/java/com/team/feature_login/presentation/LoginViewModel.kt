@@ -56,7 +56,7 @@ class LoginViewModel @Inject constructor(
                     state = state.copy(
                         isLoading = false,
                         isSuccess = true,
-                        token = result.token
+                        tokenInfo = result
                     )
                 }
                 .onFailure { throwable ->

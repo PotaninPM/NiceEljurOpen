@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.team.feature_login.data.model.LoginResponse
 import com.team.feature_login.presentation.LoginScreen
 import com.team.niceeljur.R
 import com.team.niceeljur.navigation.RootNavDestinations.Diary
@@ -23,6 +24,9 @@ import com.team.niceeljur.navigation.RootNavDestinations.Marks
 import com.team.niceeljur.navigation.RootNavDestinations.Messages
 import com.team.niceeljur.navigation.bottomNavigation.BottomNavBar
 import com.team.niceeljur.navigation.bottomNavigation.BottomNavItem
+import java.time.LocalDate
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun RootNavigation() {
@@ -34,14 +38,27 @@ fun RootNavigation() {
     val currentDestination = navBackStackEntry?.destination
 
     val sharedPrefs = context.getSharedPreferences("niceeljur", Context.MODE_PRIVATE)
-    val tokenExpirationTime = sharedPrefs.getString("token_expiration_time", "")
+    val jwtToken = sharedPrefs.getString("jwt_token", "")
+    val jwtTokenExpires = sharedPrefs.getString("jwt_token_expires", "")
 
-    /*val startDestination = if (tokenExpirationTime.isNullOrEmpty()) {
+    val startDestination = if (jwtToken.isNullOrEmpty() || checkTokenExpired(jwtTokenExpires)) {
         RootNavDestinations.Login.route
     } else {
         Diary.route
-    }*/
-    val startDestination = RootNavDestinations.Login.route
+    }
+
+    //LoginResponse(response=Response(state=200, error=null, result=TokenResult(token=9d89b2254e767a9f73730585a5a4692f11595c6d33defac381f66978b6821___2018, expires=2026-05-02 22:57:54)))
+
+    val onLoginSuccess = { tokenInfo: LoginResponse.Response.TokenResult? ->
+        sharedPrefs.edit().putString("jwt_token", tokenInfo?.token).apply()
+        sharedPrefs.edit().putString("jwt_token_expires", tokenInfo?.expires).apply()
+
+        rootNavController.navigate(Diary.route) {
+            popUpTo(RootNavDestinations.Login.route) {
+                inclusive = true
+            }
+        }
+    }
 
     val bottomNavDestinations = listOf(
         RootNavDestinations.Homework.route,
@@ -103,12 +120,8 @@ fun RootNavigation() {
         ) {
             composable(RootNavDestinations.Login.route) {
                 LoginScreen(
-                    onLoginSuccess = {
-                        rootNavController.navigate(Diary.route) {
-                            popUpTo(RootNavDestinations.Login.route) {
-                                inclusive = true
-                            }
-                        }
+                    onLoginSuccess = { token ->
+                        onLoginSuccess(token)
                     }
                 )
             }
@@ -129,5 +142,18 @@ fun RootNavigation() {
                 // FinalGradesScreen(navController = rootNavController)
             }
         }
+    }
+}
+
+fun checkTokenExpired(jwtTokenExpires: String?): Boolean {
+    if (jwtTokenExpires.isNullOrEmpty()) return true
+
+    return try {
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val expirationDate = formatter.parse(jwtTokenExpires)
+        val currentDate = Date()
+        expirationDate?.before(currentDate) ?: true
+    } catch (e: Exception) {
+        true
     }
 }
