@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 
 @Composable
 fun LoginScreen(
-    navController: NavController,
     onLoginSuccess: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {

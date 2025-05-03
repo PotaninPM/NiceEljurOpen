@@ -1,4 +1,4 @@
-package com.team.common.components
+package com.team.common.components.cards
 
 import androidx.compose.runtime.Composable
 
