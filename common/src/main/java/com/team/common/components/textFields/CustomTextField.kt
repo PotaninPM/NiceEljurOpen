@@ -1,43 +1,47 @@
 package com.team.common.components.textFields
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun CustomTextField(
-    modifier: Modifier = Modifier,
-    text: String = "",
-    label: Int,
-    onTextChange: (String) -> Unit = {},
-    isError: Boolean = false,
-    errorMessage: String? = null,
-    isEnabled: Boolean = true,
-    isSingleLine: Boolean = true,
-    maxLines: Int = 1,
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    error: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
-        modifier = modifier,
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        value = text,
-        onValueChange = onTextChange,
-        label = {
-            Text(text = stringResource(id = label))
-        },
-        isError = isError,
-        enabled = isEnabled,
-        singleLine = isSingleLine,
-        maxLines = maxLines,
-        supportingText = {
-            if (isError && errorMessage != null) {
-                Text(text = errorMessage)
-            }
-        }
+        keyboardOptions = keyboardOptions,
+        visualTransformation = visualTransformation,
+        trailingIcon = trailingIcon,
+        leadingIcon = leadingIcon,
+        supportingText = error?.let { { Text(text = it, color = MaterialTheme.colorScheme.error) } },
+        isError = error != null,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+            errorContainerColor = Color.Transparent,
+        )
     )
-}
-
+} 

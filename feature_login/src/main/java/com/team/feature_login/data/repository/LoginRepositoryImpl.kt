@@ -12,6 +12,7 @@ class LoginRepositoryImpl @Inject constructor(
     override suspend fun login(username: String, password: String): Result<LoginResponse.Response.Result> {
         return try {
             val response = api.login(LoginRequest(username, password))
+
             if (response.response.state == 200 && response.response.result != null) {
                 Result.success(response.response.result)
             } else {

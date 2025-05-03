@@ -41,12 +41,12 @@ fun RootNavigation() {
     } else {
         Diary.route
     }*/
-    val startDestination = Diary.route
+    val startDestination = RootNavDestinations.Login.route
 
     val bottomNavDestinations = listOf(
+        RootNavDestinations.Homework.route,
         Diary.route,
         Marks.route,
-        RootNavDestinations.Homework.route,
         Messages.route,
         FinalGrades.route
     )
