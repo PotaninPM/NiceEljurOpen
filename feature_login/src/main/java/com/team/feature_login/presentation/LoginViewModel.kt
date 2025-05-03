@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team.feature_login.domain.repository.LoginRepository
+import com.team.feature_login.presentation.state.LoginState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,14 +22,25 @@ class LoginViewModel @Inject constructor(
     fun onEvent(event: LoginEvent) {
         when (event) {
             is LoginEvent.OnUsernameChange -> {
-                state = state.copy(username = event.value)
+                state = state.copy(
+                    username = event.value,
+                    error = null
+                )
             }
             is LoginEvent.OnPasswordChange -> {
-                state = state.copy(password = event.value)
+                state = state.copy(
+                    password = event.value,
+                    error = null
+                )
             }
-            LoginEvent.OnLoginClick -> {
-                login()
+
+            is LoginEvent.OnWarningClose -> {
+                state = state.copy(
+                    error = null
+                )
             }
+
+            is LoginEvent.OnLoginClick -> login()
         }
     }
 
@@ -44,7 +56,7 @@ class LoginViewModel @Inject constructor(
                     state = state.copy(
                         isLoading = false,
                         isSuccess = true,
-                        token = result.token
+                        tokenInfo = result
                     )
                 }
                 .onFailure { throwable ->
@@ -56,18 +68,3 @@ class LoginViewModel @Inject constructor(
         }
     }
 }
-
-data class LoginState(
-    val username: String = "",
-    val password: String = "",
-    val isLoading: Boolean = false,
-    val isSuccess: Boolean = false,
-    val error: String? = null,
-    val token: String? = null
-)
-
-sealed class LoginEvent {
-    data class OnUsernameChange(val value: String) : LoginEvent()
-    data class OnPasswordChange(val value: String) : LoginEvent()
-    data object OnLoginClick : LoginEvent()
-} 

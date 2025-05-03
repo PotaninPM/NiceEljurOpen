@@ -9,9 +9,10 @@ import javax.inject.Inject
 class LoginRepositoryImpl @Inject constructor(
     private val api: LoginApi
 ) : LoginRepository {
-    override suspend fun login(username: String, password: String): Result<LoginResponse.Response.Result> {
+    override suspend fun login(username: String, password: String): Result<LoginResponse.Response.TokenResult> {
         return try {
             val response = api.login(LoginRequest(username, password))
+
             if (response.response.state == 200 && response.response.result != null) {
                 Result.success(response.response.result)
             } else {
