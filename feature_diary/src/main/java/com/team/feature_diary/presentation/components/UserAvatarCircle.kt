@@ -1,0 +1,50 @@
+package com.team.feature_diary.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun UserAvatarCircle(
+    title: String,
+    size: Int,
+    imageUrl: String? = null,
+) {
+    val firstLetters = title.split(" ").joinToString("")
+        .take(2)
+        .uppercase()
+
+    Box(
+        modifier = Modifier
+            .size(size.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Text(
+            text = firstLetters,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(8.dp)
+        )
+    }
+}
+
+@Preview
+@Composable
+fun UserAvatarCirclePreview() {
+    UserAvatarCircle(
+        title = "John Doe",
+        size = 50,
+    )
+}

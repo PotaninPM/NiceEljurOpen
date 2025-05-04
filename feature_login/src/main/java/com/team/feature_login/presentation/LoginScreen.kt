@@ -51,6 +51,7 @@ import com.team.common.components.textFields.CustomTextField
 import com.team.common.components.warning.WarningWindow
 import com.team.feature_login.R
 import com.team.feature_login.data.model.TokenResult
+import com.team.feature_login.presentation.state.LoginState
 
 @Composable
 fun LoginScreen(
@@ -58,39 +59,51 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
-    val context = LocalContext.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
-
-    var passwordVisible by remember { mutableStateOf(false) }
-    var usernameError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
 
     if (state.isSuccess) {
         onLoginSuccess(state.tokenInfo)
         return
     }
 
+    LoginScreenContent(
+        state = state,
+        onUsernameChange = { viewModel.onEvent(LoginEvent.OnUsernameChange(it)) },
+        onPasswordChange = { viewModel.onEvent(LoginEvent.OnPasswordChange(it)) },
+        onLoginClick = { viewModel.onEvent(LoginEvent.OnLoginClick) },
+        onWarningDismiss = { viewModel.onEvent(LoginEvent.OnWarningClose) }
+    )
+}
+
+@Composable
+private fun LoginScreenContent(
+    state: LoginState,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onWarningDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    
+    var passwordVisible by remember { mutableStateOf(false) }
+    var usernameError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(35, 164, 255, 255).copy(alpha = 0.6f))
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .imePadding()
             .padding(16.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = {
-                        focusManager.clearFocus()
-                    }
-                )
-            }
     ) {
         AnimatedVisibility(visible = state.error != null) {
             state.error?.let {
                 WarningWindow(
                     title = "Что-то пошло не так",
                     description = it,
-                    onDismiss = { viewModel.onEvent(LoginEvent.OnWarningClose) }
+                    onDismiss = onWarningDismiss
                 )
             }
         }
@@ -100,98 +113,125 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 4.dp
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logoimage),
-                        contentDescription = null,
-                        modifier = Modifier.size(120.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    CustomTextField(
-                        value = state.username,
-                        onValueChange = {
-                            viewModel.onEvent(LoginEvent.OnUsernameChange(it))
-                            usernameError = if (it.isBlank()) context.getString(R.string.enter_login) else null
-                        },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.person_24px),
-                                contentDescription = null
-                            )
-                        },
-                        label = stringResource(R.string.username_label),
-                        error = usernameError,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    CustomTextField(
-                        value = state.password,
-                        onValueChange = {
-                            viewModel.onEvent(LoginEvent.OnPasswordChange(it))
-                            passwordError = if (it.isBlank()) context.getString(R.string.enter_password) else null
-                        },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.lock_24px),
-                                contentDescription = null
-                            )
-                        },
-                        label = stringResource(R.string.password_label),
-                        error = passwordError,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            val image = if (passwordVisible) R.drawable.visibility_24px else R.drawable.visibility_off_24px
-
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(image),
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    CustomButton(
-                        text = stringResource(R.string.login_button),
-                        onClick = { 
-                            keyboardController?.hide()
-                            viewModel.onEvent(LoginEvent.OnLoginClick)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        isLoading = state.isLoading,
-                        enabled = usernameError == null && passwordError == null && 
-                                 state.username.isNotBlank() && state.password.isNotBlank()
-                    )
+            LoginCard(
+                username = state.username,
+                password = state.password,
+                isLoading = state.isLoading,
+                passwordVisible = passwordVisible,
+                usernameError = usernameError,
+                passwordError = passwordError,
+                onUsernameChange = { 
+                    onUsernameChange(it)
+                    usernameError = if (it.isBlank()) context.getString(R.string.enter_login) else null
+                },
+                onPasswordChange = {
+                    onPasswordChange(it)
+                    passwordError = if (it.isBlank()) context.getString(R.string.enter_password) else null
+                },
+                onPasswordVisibilityChange = { passwordVisible = it },
+                onLoginClick = {
+                    keyboardController?.hide()
+                    onLoginClick()
                 }
-            }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoginCard(
+    username: String,
+    password: String,
+    isLoading: Boolean,
+    passwordVisible: Boolean,
+    usernameError: String?,
+    passwordError: String?,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onPasswordVisibilityChange: (Boolean) -> Unit,
+    onLoginClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logoimage),
+                contentDescription = null,
+                modifier = Modifier.size(120.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CustomTextField(
+                value = username,
+                onValueChange = onUsernameChange,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.person_24px),
+                        contentDescription = null
+                    )
+                },
+                label = stringResource(R.string.username_label),
+                error = usernameError,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            CustomTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.lock_24px),
+                        contentDescription = null
+                    )
+                },
+                label = stringResource(R.string.password_label),
+                error = passwordError,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val image = if (passwordVisible) R.drawable.visibility_24px else R.drawable.visibility_off_24px
+
+                    IconButton(onClick = { onPasswordVisibilityChange(!passwordVisible) }) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(image),
+                            contentDescription = null
+                        )
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CustomButton(
+                text = stringResource(R.string.login_button),
+                onClick = onLoginClick,
+                modifier = Modifier.fillMaxWidth(),
+                isLoading = isLoading,
+                enabled = usernameError == null && passwordError == null && 
+                         username.isNotBlank() && password.isNotBlank()
+            )
         }
     }
 }

@@ -1,19 +1,30 @@
 package com.team.feature_diary.data.repository
 
-import com.team.feature_diary.data.model.DiaryResult
 import com.team.feature_diary.data.remote.DiaryApi
+import com.team.feature_diary.domain.model.StudentInfo
 import com.team.feature_diary.domain.repository.DiaryRepository
 import javax.inject.Inject
 
 class DiaryRepositoryImpl @Inject constructor(
     private val api: DiaryApi
 ) : DiaryRepository {
-    override suspend fun getDiary(token: String): Result<DiaryResult> {
+    override suspend fun getStudentInfo(token: String): Result<StudentInfo> {
         return try {
-            val response = api.getDiary(token = "Bearer $token")
+            val response = api.getDiary(authToken = token)
 
             if (response.response.state == 200 && response.response.result != null) {
-                Result.success(response.response.result)
+                val student = response.response.result.relations.students.entries.firstOrNull()
+                
+                if (student != null) {
+                    Result.success(
+                        StudentInfo(
+                            id = student.key,
+                            name = student.value.title
+                        )
+                    )
+                } else {
+                    Result.failure(Exception("No student information found"))
+                }
             } else {
                 Result.failure(Exception(response.response.error ?: "Unknown error"))
             }

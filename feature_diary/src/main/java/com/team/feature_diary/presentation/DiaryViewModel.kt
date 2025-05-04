@@ -19,15 +19,15 @@ class DiaryViewModel @Inject constructor(
     var state by mutableStateOf(DiaryState())
         private set
 
-    fun loadDiary(token: String) {
+    fun loadStudentInfo(token: String) {
         viewModelScope.launch {
             state = state.copy(isLoading = true, error = null)
 
-            repository.getDiary(token)
-                .onSuccess { result ->
+            repository.getStudentInfo(token)
+                .onSuccess { studentInfo ->
                     state = state.copy(
                         isLoading = false,
-                        days = result.days
+                        studentInfo = studentInfo
                     )
                 }
                 .onFailure { throwable ->

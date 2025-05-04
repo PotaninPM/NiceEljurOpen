@@ -1,9 +1,9 @@
 package com.team.feature_diary.presentation.state
 
-import com.team.feature_diary.data.model.DiaryDay
+import com.team.feature_diary.domain.model.StudentInfo
 
 data class DiaryState(
-    val days: List<DiaryDay> = emptyList(),
+    val studentInfo: StudentInfo? = null,
     val isLoading: Boolean = false,
     val error: String? = null
-) 
+)

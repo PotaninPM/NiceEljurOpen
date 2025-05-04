@@ -1,7 +1,7 @@
 package com.team.feature_diary.domain.repository
 
-import com.team.feature_diary.data.model.DiaryResult
+import com.team.feature_diary.domain.model.StudentInfo
 
 interface DiaryRepository {
-    suspend fun getDiary(token: String): Result<DiaryResult>
+    suspend fun getStudentInfo(token: String): Result<StudentInfo>
 } 
