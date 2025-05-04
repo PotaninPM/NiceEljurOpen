@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.Space
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -216,6 +217,8 @@ private fun DayItem(
     val figuresTextColor = if (isVacation) MaterialTheme.colorScheme.error else LocalContentColor.current
     val dayOfWeeksTextColor = if (isVacation) MaterialTheme.colorScheme.error else Color.Gray
 
+    val today = LocalDate.now()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -244,6 +247,12 @@ private fun DayItem(
                 .padding(2.dp)
         ) {
             Box(
+                modifier = Modifier
+                    .border(
+                        width = 1.dp,
+                        color = if (today == date) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f) else Color.Transparent,
+                        shape = RoundedCornerShape(50)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
