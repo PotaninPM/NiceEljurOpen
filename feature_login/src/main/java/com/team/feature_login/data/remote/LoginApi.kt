@@ -1,5 +1,6 @@
 package com.team.feature_login.data.remote
 
+import com.team.common.ApiConstants
 import com.team.feature_login.data.model.LoginRequest
 import com.team.feature_login.data.model.LoginResponse
 import retrofit2.http.Body
@@ -11,9 +12,9 @@ interface LoginApi {
     @POST("apiv3/auth")
     suspend fun login(
         @Body request: LoginRequest,
-        @Header("User-Agent") userAgent: String = "Dalvik/2.1.0 (Linux; U; Android 11; Pixel 4 Build/RP1A.200720.011)",
-        @Query("devkey") devKey: String = "19c4bfc2705023fe080ce94ace26aec9",
-        @Query("out_format") outFormat: String = "json",
-        @Query("vendor") vendor: String = "hselyceum"
+        @Header("User-Agent") userAgent: String = ApiConstants.USER_AGENT,
+        @Query("devkey") devKey: String = ApiConstants.DEV_KEY,
+        @Query("out_format") outFormat: String = ApiConstants.OUT_FORMAT,
+        @Query("vendor") vendor: String = ApiConstants.VENDOR,
     ): LoginResponse
-} 
+}
