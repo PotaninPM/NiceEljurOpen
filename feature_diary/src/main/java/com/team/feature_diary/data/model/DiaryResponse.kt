@@ -24,6 +24,7 @@ data class StudentDiary(
 data class DaySchedule(
     val name: String,
     val title: String,
+    val alert: String?,
     val items: Map<String, Lesson>
 )
 

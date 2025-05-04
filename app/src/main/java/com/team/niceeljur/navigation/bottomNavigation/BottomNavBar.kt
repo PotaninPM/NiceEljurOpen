@@ -31,7 +31,7 @@ fun BottomNavBar(
         tonalElevation = 3.dp,
         shadowElevation = 3.dp,
         modifier = Modifier
-            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Vertical))
+            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Bottom))
     ) {
         Row(
             modifier = Modifier

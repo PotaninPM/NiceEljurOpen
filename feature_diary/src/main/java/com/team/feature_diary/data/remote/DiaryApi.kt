@@ -1,5 +1,6 @@
 package com.team.feature_diary.data.remote
 
+import android.util.Log
 import com.team.common.ApiConstants
 import com.team.feature_diary.data.model.DiaryResponse
 import com.team.feature_diary.data.model.StudentInfoResponse
@@ -37,7 +38,8 @@ interface DiaryApi {
         fun getDefaultWeekRange(): String {
             val today = LocalDate.now()
             val monday = today.minusDays(today.dayOfWeek.value - 1L)
-            val sunday = monday.plusDays(12)
+            val sunday = monday.plusDays(6)
+
             val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
             return "${monday.format(formatter)}-${sunday.format(formatter)}"
         }

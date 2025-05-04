@@ -31,7 +31,6 @@ class DiaryRepositoryImpl @Inject constructor(
                 Result.failure(Exception(response.response.error ?: "Unknown error"))
             }
         } catch (e: Exception) {
-            Log.d("INFOG2", e.toString())
             Result.failure(e)
         }
     }

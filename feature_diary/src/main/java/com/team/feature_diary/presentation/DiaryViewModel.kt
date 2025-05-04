@@ -1,6 +1,5 @@
 package com.team.feature_diary.presentation
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,7 +13,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,7 +35,7 @@ class DiaryViewModel @Inject constructor(
             if (lastUpdateTime == 0L || hasOneMonthPassed(lastUpdateTime)) {
                 updateStudentInfo(token)
             } else {
-                loadWeekDiary(token, studentId)
+                loadDiary(token, studentId)
             }
         } else {
             updateStudentInfo(token)
@@ -53,7 +51,7 @@ class DiaryViewModel @Inject constructor(
                     state = state.copy(
                         studentInfo = studentInfo
                     )
-                    loadWeekDiary(token, studentInfo.id)
+                    loadDiary(token, studentInfo.id)
                 }
                 .onFailure { throwable ->
                     state = state.copy(
@@ -64,9 +62,9 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
-    private fun loadWeekDiary(token: String, studentId: String) {
+    private fun loadDiary(token: String, studentId: String, days: String? = null) {
         viewModelScope.launch {
-            repository.getDiary(token, studentId)
+            repository.getDiary(token, studentId, days)
                 .onSuccess { diary ->
                     state = state.copy(
                         isLoading = false,
