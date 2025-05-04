@@ -15,7 +15,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.team.feature_login.data.model.LoginResponse
+import com.team.feature_diary.presentation.DiaryScreen
+import com.team.feature_login.data.model.TokenResult
 import com.team.feature_login.presentation.LoginScreen
 import com.team.niceeljur.R
 import com.team.niceeljur.navigation.RootNavDestinations.Diary
@@ -24,7 +25,6 @@ import com.team.niceeljur.navigation.RootNavDestinations.Marks
 import com.team.niceeljur.navigation.RootNavDestinations.Messages
 import com.team.niceeljur.navigation.bottomNavigation.BottomNavBar
 import com.team.niceeljur.navigation.bottomNavigation.BottomNavItem
-import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -49,7 +49,7 @@ fun RootNavigation() {
 
     //LoginResponse(response=Response(state=200, error=null, result=TokenResult(token=9d89b2254e767a9f73730585a5a4692f11595c6d33defac381f66978b6821___2018, expires=2026-05-02 22:57:54)))
 
-    val onLoginSuccess = { tokenInfo: LoginResponse.Response.TokenResult? ->
+    val onLoginSuccess = { tokenInfo: TokenResult? ->
         sharedPrefs.edit().putString("jwt_token", tokenInfo?.token).apply()
         sharedPrefs.edit().putString("jwt_token_expires", tokenInfo?.expires).apply()
 
@@ -127,7 +127,7 @@ fun RootNavigation() {
             }
 
             composable(Diary.route) {
-                // DiaryScreen(navController = rootNavController)
+                DiaryScreen()
             }
 
             composable(Marks.route) {

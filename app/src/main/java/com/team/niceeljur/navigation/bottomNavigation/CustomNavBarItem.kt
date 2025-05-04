@@ -49,7 +49,7 @@ fun CustomNavBarItem(
         label = "contentColor"
     )
 
-    val iconSize = if (selected) 28.dp else 32.dp
+    val iconSize = if (selected) 25.dp else 30.dp
 
     Box(
         modifier = modifier
@@ -62,7 +62,7 @@ fun CustomNavBarItem(
                 interactionSource = interactionSource,
                 indication = null
             )
-            .padding(vertical = 8.dp),
+            .padding(vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -78,7 +78,7 @@ fun CustomNavBarItem(
             )
 
             if (selected) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Text(
                     text = stringResource(id = labelResId),
