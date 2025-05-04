@@ -48,6 +48,7 @@ dependencies {
     // Retrofit
     api(libs.retrofit)
     api(libs.converter.gson)
+    api("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Room
     ksp(libs.androidx.room.compiler)

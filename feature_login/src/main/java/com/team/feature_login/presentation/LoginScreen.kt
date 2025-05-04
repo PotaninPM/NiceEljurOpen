@@ -93,8 +93,6 @@ private fun LoginScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(35, 164, 255, 255).copy(alpha = 0.6f))
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .imePadding()
             .padding(16.dp)
     ) {

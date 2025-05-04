@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.team.feature_diary.presentation.DiaryScreen
 import com.team.feature_login.data.model.TokenResult
 import com.team.feature_login.presentation.LoginScreen
 import com.team.niceeljur.R
@@ -126,7 +127,7 @@ fun RootNavigation() {
             }
 
             composable(Diary.route) {
-                // DiaryScreen(navController = rootNavController)
+                DiaryScreen()
             }
 
             composable(Marks.route) {

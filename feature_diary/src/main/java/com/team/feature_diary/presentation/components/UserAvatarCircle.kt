@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun UserAvatarCircle(
     title: String,
-    size: Int,
+    size: Int = 50,
     imageUrl: String? = null,
 ) {
     val firstLetters = title.split(" ").joinToString("")
@@ -32,7 +32,7 @@ fun UserAvatarCircle(
         Text(
             text = firstLetters,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .padding(8.dp)

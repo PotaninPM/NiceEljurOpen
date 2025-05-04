@@ -12,6 +12,11 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/common" />
+            <option value="$PROJECT_DIR$/feature_diary" />
+            <option value="$PROJECT_DIR$/feature_final_grades" />
+            <option value="$PROJECT_DIR$/feature_login" />
+            <option value="$PROJECT_DIR$/feature_marks" />
+            <option value="$PROJECT_DIR$/feature_messages" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

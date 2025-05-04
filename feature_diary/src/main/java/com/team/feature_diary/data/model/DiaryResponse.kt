@@ -1,7 +1,5 @@
 package com.team.feature_diary.data.model
 
-import com.google.gson.annotations.SerializedName
-
 data class DiaryResponse(
     val response: DiaryResponseData
 )
@@ -13,37 +11,65 @@ data class DiaryResponseData(
 )
 
 data class DiaryResult(
-    val roles: List<String>,
-    val relations: Relations
+    val students: Map<String, StudentDiary>
 )
 
-data class Relations(
-    val students: Map<String, Student>,
-    val groups: Map<String, Group>
-)
-
-data class Student(
-    val rules: List<String>,
-    val rel: String,
+data class StudentDiary(
     val name: String,
     val title: String,
-    val lastname: String,
-    val firstname: String,
-    val gender: String,
-    val `class`: String,
-    val parallel: Int,
-    val city: String
+    val parent_signed: Boolean,
+    val days: Map<String, DaySchedule>
 )
 
-data class Group(
-    val rules: List<String>,
-    val rel: String,
+data class DaySchedule(
     val name: String,
-    val parallel: Int,
-    val balls: Int,
-    @SerializedName("hometeacher_id") val hometeacherId: String,
-    @SerializedName("hometeacher_name") val hometeacherName: String,
-    @SerializedName("hometeacher_lastname") val hometeacherLastname: String,
-    @SerializedName("hometeacher_firstname") val hometeacherFirstname: String,
-    @SerializedName("hometeacher_middlename") val hometeacherMiddlename: String
+    val title: String,
+    val items: Map<String, Lesson>
+)
+
+data class Lesson(
+    val homework: Map<String, HomeworkItem>,
+    val assessments: List<Assessment>? = null,
+    val files: List<LessonFile>,
+    val resources: List<String>,
+    val name: String,
+    val lesson_id: String,
+    val num: String,
+    val room: String,
+    val teacher: String,
+    val sort: Int,
+    val grp_short: String,
+    val grp: String,
+    val starttime: String,
+    val endtime: String,
+    val topic: String?
+)
+
+data class HomeworkItem(
+    val value: String,
+    val id: Int,
+    val individual: Boolean
+)
+
+data class Assessment(
+    val value: String,
+    val countas: String,
+    val color_hex: String?,
+    val count: Boolean,
+    val convert: Int,
+    val lesson_id: String,
+    val date: String,
+    val nm: String,
+    val control_type: String,
+    val control_type_short: String,
+    val weight: Int,
+    val weight_float: String,
+    val color: String,
+    val comment: String
+)
+
+data class LessonFile(
+    val toid: Int,
+    val filename: String,
+    val link: String
 ) 
