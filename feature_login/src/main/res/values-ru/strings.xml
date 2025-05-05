@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Login Screen -->
+    <string name="welcome_back">Добро пожаловать</string>
+    <string name="username_label">Логин</string>
+    <string name="password_label">Пароль</string>
+    <string name="login_button">Войти</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="hide_password">Скрыть пароль</string>
+
+    <!-- Validation Errors -->
+    <string name="error_empty_username">Введите логин</string>
+    <string name="error_username_too_short">Логин должен содержать минимум 3 символа</string>
+    <string name="error_empty_password">Введите пароль</string>
+    <string name="error_password_too_short">Пароль должен содержать минимум 6 символов</string>
+
+    <!-- Server Errors -->
+    <string name="error_auth_default">Ошибка авторизации. Проверьте логин и пароль.</string>
+    <string name="enter_password">Введите пароль</string>
+    <string name="enter_login">Введите логин</string>
+</resources>
