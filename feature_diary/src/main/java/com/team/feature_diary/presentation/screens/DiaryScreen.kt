@@ -1,8 +1,7 @@
-package com.team.feature_diary.presentation
+package com.team.feature_diary.presentation.screens
 
 import android.content.Context
 import android.util.Log
-import android.widget.Space
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,12 +20,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Badge
@@ -37,14 +33,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,21 +47,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.team.common.components.cards.MarkCard
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.team.feature_diary.R
 import com.team.feature_diary.data.model.DaySchedule
 import com.team.feature_diary.data.model.HomeworkItem
 import com.team.feature_diary.data.model.Lesson
 import com.team.feature_diary.data.model.StudentDiary
 import com.team.feature_diary.data.model.StudentPeriods
+import com.team.feature_diary.presentation.components.CalendarDialog
+import com.team.feature_diary.presentation.viewModels.DiaryViewModel
 import com.team.feature_diary.presentation.components.UserAvatarCircle
 import com.team.feature_diary.presentation.state.DiaryState
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -81,6 +76,7 @@ import java.util.Locale
 
 @Composable
 fun DiaryScreen(
+    navController: NavController = rememberNavController(),
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
@@ -90,6 +86,8 @@ fun DiaryScreen(
     val lastUpdateTime = sharedPrefs.getLong("last_student_info_update", 0)
     val studentId = sharedPrefs.getString("student_id", null)
     val studentName = sharedPrefs.getString("student_name", null)
+
+    var calenderClicked by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadStudentInfo(
@@ -107,13 +105,29 @@ fun DiaryScreen(
                 .apply()
         }
     }
+    if (calenderClicked) {
+        CalendarDialog(
+            onDismissRequest = {
+                calenderClicked = !calenderClicked
+            },
+            onDataSelected = {
 
-    DiaryScreenContent(state)
+            }
+        )
+    } else {
+        DiaryScreenContent(
+            state = state,
+            onCalendarClick = {
+                calenderClicked = !calenderClicked
+            }
+        )
+    }
 }
 
 @Composable
 private fun DiaryScreenContent(
-    state: DiaryState
+    state: DiaryState,
+    onCalendarClick: () -> Unit = {},
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
@@ -139,6 +153,7 @@ private fun DiaryScreenContent(
             onBellClick = {
 
             },
+            onCalendarClick = { onCalendarClick() },
             periodsInfo = state.periods
         )
 
@@ -589,6 +604,7 @@ fun CustomTopAppBar(
     chosenWeek: String = "21.04 - 27.04",
     personName: String? = "None",
     onBellClick: () -> Unit = {},
+    onCalendarClick: () -> Unit = {},
     periodsInfo: StudentPeriods?
 ) {
     Row(
@@ -604,6 +620,7 @@ fun CustomTopAppBar(
             onWeekChosen = { week ->
                 Log.d("DiaryScreen", "Week chosen: $week")
             },
+            onCalendarClick = onCalendarClick,
             periodsInfo = periodsInfo
         )
 
@@ -654,26 +671,27 @@ private fun BellIcon(somethingNew: Boolean = true) {
 fun WeekChooserList(
     chosenWeek: String = "21.04 - 27.04",
     periodsInfo: StudentPeriods?,
+    onCalendarClick: () -> Unit = {},
     onWeekChosen: (String) -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     val periods = periodsInfo?.periods?.map { it.name to it.weeks } ?: emptyList()
 
-    Log.d("DiaryScreen", "Periods: $periodsInfo")
     OutlinedCard(
         modifier = Modifier
             .wrapContentWidth()
             .wrapContentHeight(),
         shape = RoundedCornerShape(12.dp),
         onClick = {
-            expanded = !expanded
+//            expanded = !expanded
+            onCalendarClick()
         }
     ) {
         Row(
             modifier = Modifier
                 .padding(vertical = 8.dp)
-                .padding(start = 10.dp, end = 5.dp)
+                .padding(horizontal = 10.dp)
                 .align(Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -685,17 +703,18 @@ fun WeekChooserList(
             )
 
             Spacer(modifier = Modifier.width(3.dp))
+
             Text(
                 text = chosenWeek,
                 fontWeight = FontWeight.SemiBold,
             )
 
-            Icon(
+            /*Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 modifier = Modifier
                     .size(24.dp)
-            )
+            )*/
         }
     }
 

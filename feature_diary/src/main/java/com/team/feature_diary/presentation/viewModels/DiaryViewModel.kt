@@ -1,4 +1,4 @@
-package com.team.feature_diary.presentation
+package com.team.feature_diary.presentation.viewModels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
