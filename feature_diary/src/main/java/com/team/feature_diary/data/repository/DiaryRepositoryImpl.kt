@@ -61,9 +61,9 @@ class DiaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getPeriods(token: String, studentId: String): Result<StudentPeriods> {
+    override suspend fun getPeriods(token: String): Result<StudentPeriods> {
         return try {
-            val response = api.getPeriods(authToken = token, student = studentId)
+            val response = api.getPeriods(authToken = token)
 
             if (response.response.state == 200 && response.response.result != null) {
                 val student = response.response.result.students.firstOrNull()

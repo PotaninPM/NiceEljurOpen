@@ -34,6 +34,8 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -65,6 +67,7 @@ import com.team.feature_diary.data.model.DaySchedule
 import com.team.feature_diary.data.model.HomeworkItem
 import com.team.feature_diary.data.model.Lesson
 import com.team.feature_diary.data.model.StudentDiary
+import com.team.feature_diary.data.model.StudentPeriods
 import com.team.feature_diary.presentation.components.UserAvatarCircle
 import com.team.feature_diary.presentation.state.DiaryState
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -135,7 +138,8 @@ private fun DiaryScreenContent(
             personName = state.studentInfo?.name,
             onBellClick = {
 
-            }
+            },
+            periodsInfo = state.periods
         )
 
         Spacer(modifier = Modifier.size(4.dp))
@@ -584,7 +588,8 @@ private fun EmptySchedule() {
 fun CustomTopAppBar(
     chosenWeek: String = "21.04 - 27.04",
     personName: String? = "None",
-    onBellClick: () -> Unit = {}
+    onBellClick: () -> Unit = {},
+    periodsInfo: StudentPeriods?
 ) {
     Row(
         modifier = Modifier
@@ -598,7 +603,8 @@ fun CustomTopAppBar(
             chosenWeek = chosenWeek,
             onWeekChosen = { week ->
                 Log.d("DiaryScreen", "Week chosen: $week")
-            }
+            },
+            periodsInfo = periodsInfo
         )
 
         Row(
@@ -647,11 +653,14 @@ private fun BellIcon(somethingNew: Boolean = true) {
 @Composable
 fun WeekChooserList(
     chosenWeek: String = "21.04 - 27.04",
-    availableWeeks: List<String> = listOf("21.04 - 27.04", "21.04 - 27.04", "21.04 - 27.04"),
+    periodsInfo: StudentPeriods?,
     onWeekChosen: (String) -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    val periods = periodsInfo?.periods?.map { it.name to it.weeks } ?: emptyList()
+
+    Log.d("DiaryScreen", "Periods: $periodsInfo")
     OutlinedCard(
         modifier = Modifier
             .wrapContentWidth()
@@ -687,6 +696,34 @@ fun WeekChooserList(
                 modifier = Modifier
                     .size(24.dp)
             )
+        }
+    }
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+    ) {
+        periods.forEach { (periodName, weeks) ->
+            val periodWeeks = weeks.map { it.start + " - " + it.end }
+
+            periodWeeks.forEach { week ->
+                val startOfWeek = week.split(" - ")[0]
+                val endOfWeek = week.split(" - ")[1]
+
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = "$startOfWeek - $endOfWeek",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                        )
+                    },
+                    onClick = {
+                        onWeekChosen(week)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }

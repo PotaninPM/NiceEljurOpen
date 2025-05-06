@@ -37,12 +37,12 @@ interface DiaryApi {
     @GET("apiv3/getperiods")
     suspend fun getPeriods(
         @Header("User-Agent") userAgent: String = ApiConstants.USER_AGENT,
-        @Header("Cookie") cookie: String = "",
+        @Query("weeks") weeks: Boolean = true,
+        @Query("show_disabled") showDisabled: Boolean = true,
         @Query("devkey") devKey: String = ApiConstants.DEV_KEY,
         @Query("out_format") outFormat: String = ApiConstants.OUT_FORMAT,
         @Query("auth_token") authToken: String = "",
         @Query("vendor") vendor: String = ApiConstants.VENDOR,
-        @Query("student") student: String
     ): PeriodResponse
 
     companion object {
