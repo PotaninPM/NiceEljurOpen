@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun UserAvatarCircle(
     title: String?,
-    size: Int = 45,
+    size: Int = 42,
     imageUrl: String? = null,
 ) {
     val firstLetters = title?.split(" ")?.mapNotNull {

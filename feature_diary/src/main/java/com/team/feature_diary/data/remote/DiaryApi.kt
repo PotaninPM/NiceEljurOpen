@@ -1,8 +1,8 @@
 package com.team.feature_diary.data.remote
 
-import android.util.Log
 import com.team.common.ApiConstants
 import com.team.feature_diary.data.model.DiaryResponse
+import com.team.feature_diary.data.model.PeriodResponse
 import com.team.feature_diary.data.model.StudentInfoResponse
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -34,11 +34,22 @@ interface DiaryApi {
         @Query("student") student: String
     ): DiaryResponse
 
+    @GET("apiv3/getperiods")
+    suspend fun getPeriods(
+        @Header("User-Agent") userAgent: String = ApiConstants.USER_AGENT,
+        @Header("Cookie") cookie: String = "",
+        @Query("devkey") devKey: String = ApiConstants.DEV_KEY,
+        @Query("out_format") outFormat: String = ApiConstants.OUT_FORMAT,
+        @Query("auth_token") authToken: String = "",
+        @Query("vendor") vendor: String = ApiConstants.VENDOR,
+        @Query("student") student: String
+    ): PeriodResponse
+
     companion object {
         fun getDefaultWeekRange(): String {
             val today = LocalDate.now()
-            val monday = today.minusDays(today.dayOfWeek.value - 1L)
-            val sunday = monday.plusDays(6)
+            val monday = today.minusDays(today.dayOfWeek.value - 1L).minusWeeks(1)
+            val sunday = monday.plusDays(6).plusWeeks(1)
 
             val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
             return "${monday.format(formatter)}-${sunday.format(formatter)}"

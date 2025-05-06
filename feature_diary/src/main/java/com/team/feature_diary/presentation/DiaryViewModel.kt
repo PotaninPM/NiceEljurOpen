@@ -70,11 +70,24 @@ class DiaryViewModel @Inject constructor(
                         isLoading = false,
                         weekDiary = diary
                     )
+                    loadPeriods(token, studentId)
                 }
                 .onFailure { throwable ->
                     state = state.copy(
                         isLoading = false,
                         error = throwable.message
+                    )
+                }
+        }
+    }
+
+    private fun loadPeriods(token: String, studentId: String) {
+        viewModelScope.launch {
+            repository.getPeriods(token, studentId)
+                .onSuccess { periods ->
+                    state = state.copy(
+                        isLoading = false,
+                        periods = periods
                     )
                 }
         }
