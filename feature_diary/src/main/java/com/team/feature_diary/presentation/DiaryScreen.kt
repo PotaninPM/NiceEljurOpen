@@ -12,21 +12,30 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -35,28 +44,39 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.team.common.components.cards.MarkCard
 import com.team.feature_diary.R
 import com.team.feature_diary.data.model.DaySchedule
+import com.team.feature_diary.data.model.HomeworkItem
 import com.team.feature_diary.data.model.Lesson
 import com.team.feature_diary.data.model.StudentDiary
+import com.team.feature_diary.data.model.StudentPeriods
 import com.team.feature_diary.presentation.components.UserAvatarCircle
 import com.team.feature_diary.presentation.state.DiaryState
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
 @Composable
@@ -88,34 +108,7 @@ fun DiaryScreen(
         }
     }
 
-    if (!state.isLoading && state.weekDiary != null) {
-        DiaryScreenContent(state)
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(28.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.size(8.dp))
-
-                Text(
-                    text = "Загрузка расписания...",
-                    style = MaterialTheme.typography.titleSmall
-                )
-            }
-        }
-    }
+    DiaryScreenContent(state)
 }
 
 @Composable
@@ -137,12 +130,16 @@ private fun DiaryScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(top = 4.dp)
             .background(MaterialTheme.colorScheme.background)
     ) {
         CustomTopAppBar(
             chosenWeek = chosenWeek,
             personName = state.studentInfo?.name,
-            onBellClick = {}
+            onBellClick = {
+
+            },
+            periodsInfo = state.periods
         )
 
         Spacer(modifier = Modifier.size(4.dp))
@@ -150,62 +147,108 @@ private fun DiaryScreenContent(
         WeekCalendar(
             diary = state.weekDiary,
             selectedDate = selectedDate,
-            onDateSelected = { selectedDate = it }
+            onDateSelected = { selectedDate = it },
+            onWeekChanged = { startOfWeek, endOfWeek ->
+
+            }
         )
 
-        SettingsBar()
+        if (!state.isLoading && state.weekDiary != null) {
+            state.weekDiary.let { diary ->
+                val daySchedule = diary.days[selectedDate.format(DateTimeFormatter.BASIC_ISO_DATE)]
 
-        state.weekDiary?.let { diary ->
-            val daySchedule = diary.days[selectedDate.format(DateTimeFormatter.BASIC_ISO_DATE)]
+                if (daySchedule != null && daySchedule.alert == null) {
+                    LessonsList(daySchedule = daySchedule, selectedDate = selectedDate)
+                } else {
+                    EmptySchedule()
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(28.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-            if (daySchedule != null && daySchedule.alert == null) {
-                LessonsList(daySchedule = daySchedule)
-            } else {
-                EmptySchedule()
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Text(
+                        text = "Загрузка расписания...",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun SettingsBar() {
-    Row(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-    }
-}
-
-@Composable
-private fun WeekCalendar(
+fun WeekCalendar(
     diary: StudentDiary?,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
+    onWeekChanged: (startOfWeek: LocalDate, endOfWeek: LocalDate) -> Unit
 ) {
-    val currentWeek = remember(selectedDate) {
-        val monday = selectedDate.minusDays(selectedDate.dayOfWeek.value - 1L)
-        (0..6).map { monday.plusDays(it.toLong()) }
+    val initialPage = Int.MAX_VALUE / 2
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = {
+        Int.MAX_VALUE
+    })
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .map { page ->
+                val weekOffset = page - initialPage
+                val anyDayInWeek = selectedDate.plusWeeks(weekOffset.toLong())
+                val monday = anyDayInWeek.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                val sunday = monday.plusDays(6)
+                monday to sunday
+            }
+            .distinctUntilChanged()
+            .collect { (monday, sunday) ->
+                onWeekChanged(monday, sunday)
+            }
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        currentWeek.forEach { date ->
-            val day = diary?.days?.get(date.format(DateTimeFormatter.BASIC_ISO_DATE))
-            val isVacation = day?.alert != null || date.dayOfWeek.value > 5
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxWidth()
+    ) { page ->
+        val weekOffset = page - initialPage
+        val anyDayInWeek = selectedDate.plusWeeks(weekOffset.toLong())
+        val monday = anyDayInWeek.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weekDays = (0..6).map { monday.plusDays(it.toLong()) }
 
-            DayItem(
-                isVacation = isVacation,
-                date = date,
-                isSelected = date == selectedDate,
-                onDateSelected = onDateSelected
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            weekDays.forEach { date ->
+                val day = diary?.days?.get(date.format(DateTimeFormatter.BASIC_ISO_DATE))
+                val isVacation = day?.alert != null || date.dayOfWeek.value > 5
+
+                DayItem(
+                    isVacation = isVacation,
+                    date = date,
+                    isSelected = date == selectedDate,
+                    onDateSelected = { onDateSelected(it) }
+                )
+            }
         }
     }
 }
+
 
 @Composable
 private fun DayItem(
@@ -214,11 +257,31 @@ private fun DayItem(
     isSelected: Boolean,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val figuresTextColor = if (isVacation) MaterialTheme.colorScheme.error else LocalContentColor.current
-    val dayOfWeeksTextColor = if (isVacation) MaterialTheme.colorScheme.error else Color.Gray
-
     val today = LocalDate.now()
 
+    val figuresTextColor = if (isSelected) {
+        Color.White
+    } else {
+        if (today == date) {
+            Color(0, 100, 255).copy(alpha = 0.6f)
+        } else {
+            if (isVacation) {
+                MaterialTheme.colorScheme.error
+            } else {
+                LocalContentColor.current
+            }
+        }
+    }
+
+    val textFontWeight = if (isSelected) {
+        FontWeight.Bold
+    } else if (today == date) {
+       FontWeight.SemiBold
+    } else {
+        FontWeight.Normal
+    }
+
+    val dayOfWeeksTextColor = if (isVacation) MaterialTheme.colorScheme.error else Color.Gray
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -244,21 +307,21 @@ private fun DayItem(
             color = if (isSelected) Color(0, 100, 255).copy(alpha = 0.8f) else Color.Transparent,
             modifier = Modifier
                 .size(36.dp)
-                .padding(2.dp)
+                .padding(1.dp)
         ) {
             Box(
                 modifier = Modifier
                     .border(
                         width = 1.dp,
-                        color = if (today == date) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f) else Color.Transparent,
+                        color = Color.Transparent,
                         shape = RoundedCornerShape(50)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = date.dayOfMonth.toString(),
-                    color = if (isSelected) Color.White else figuresTextColor,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    color = figuresTextColor,
+                    fontWeight = textFontWeight
                 )
             }
         }
@@ -266,7 +329,7 @@ private fun DayItem(
 }
 
 @Composable
-private fun LessonsList(daySchedule: DaySchedule) {
+private fun LessonsList(daySchedule: DaySchedule, selectedDate: LocalDate) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -276,7 +339,9 @@ private fun LessonsList(daySchedule: DaySchedule) {
         
         items(sortedLessons.size) { index ->
             val (_, lesson) = sortedLessons[index]
-            LessonItem(lesson)
+            Log.d("INFOG2", selectedDate.toString())
+
+            LessonItem(lesson, selectedDate)
 
             if (index < sortedLessons.lastIndex) {
                 val nextLesson = sortedLessons[index + 1].second
@@ -306,55 +371,159 @@ private fun calculateBreakMinutes(endTime: String, startTime: String): Int {
 }
 
 @Composable
-private fun LessonItem(lesson: Lesson) {
+private fun LessonItem(lesson: Lesson, day: LocalDate) {
+    val currentTime = LocalDate.now().minusDays(100)
+
+    val textColor = if (currentTime.isAfter(day)) {
+        Color.Gray
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    val indicatorColor = if (currentTime.isAfter(day)) {
+        Color.Gray
+    } else {
+        Color(23, 173, 252, 255)
+    }
+
+    val homeworkTextColor = if (currentTime.isAfter(day)) {
+        Color.Gray
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
+    val homeworks = lesson.homework.values.toList()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "${lesson.num} урок ${lesson.starttime}-${lesson.endtime}",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                if (lesson.room.isNotEmpty()) {
-                    Text(
-                        text = lesson.room,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+       Row(
+           modifier = Modifier
+               .fillMaxWidth()
+       ) {
+           LessonIndicator(indicatorColor)
 
-            Text(
-                text = lesson.name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 8.dp)
+           Column(
+               modifier = Modifier
+                   .fillMaxWidth()
+                   .padding(16.dp)
+           ) {
+               Row(
+                   modifier = Modifier.fillMaxWidth(),
+                   horizontalArrangement = Arrangement.spacedBy(8.dp)
+               ) {
+                   Text(
+                       text = "${lesson.num} урок ${lesson.starttime.substring(0, 5)} - ${lesson.endtime.substring(0, 5)}",
+                       style = MaterialTheme.typography.bodyMedium,
+                       color = textColor
+                   )
+                   if (lesson.room.isNotEmpty()) {
+                       Text(
+                           text = "•",
+                           color = MaterialTheme.colorScheme.onSurface,
+                           fontWeight = FontWeight.Bold,
+                           style = MaterialTheme.typography.bodyMedium
+                       )
+                       Text(
+                           text = lesson.room,
+                           color = indicatorColor,
+                           fontWeight = FontWeight.SemiBold,
+                           style = MaterialTheme.typography.bodyMedium
+                       )
+                   }
+               }
+
+               Text(
+                   text = lesson.name,
+                   style = MaterialTheme.typography.titleMedium,
+                   fontWeight = FontWeight.Bold,
+                   color = textColor,
+                   modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
+               )
+
+               HomeworkAndFiles(lesson, homeworkTextColor, homeworks)
+
+               /*MarkCard(
+                   grade = 5,
+                   weight = 0.25f,
+               )*/
+           }
+       }
+
+    }
+}
+
+@Composable
+private fun HomeworkAndFiles(
+    lesson: Lesson,
+    homeworkTextColor: Color,
+    homeworks: List<HomeworkItem>
+) {
+    if (lesson.homework.isNotEmpty()) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.home_24px),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(end = 4.dp),
+                tint = homeworkTextColor
             )
 
-            if (lesson.homework.isNotEmpty()) {
-                Text(
-                    text = "Домашнее задание",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                lesson.homework.values.forEach { homework ->
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Text(
+                text = "Домашнее задание",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = homeworkTextColor
+            )
+        }
+
+        Column(
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+        ) {
+            homeworks.forEachIndexed { index, hw ->
+                if (hw.value.isNotEmpty()) {
                     Text(
-                        text = homework.value,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "• ${hw.value}",
+                        color = homeworkTextColor,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Normal
                     )
+                    if (index < homeworks.lastIndex) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LessonIndicator(color: Color) {
+    Column {
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Box(
+            modifier = Modifier
+                .width(8.dp)
+                .height(55.dp)
+                .background(
+                    color = color,
+                    shape  = RoundedCornerShape(
+                        topEnd = 200.dp,
+                        bottomEnd = 200.dp
+                    )
+                )
+        )
     }
 }
 
@@ -368,15 +537,29 @@ private fun BreakItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         if (breakMinutes > 0) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.sprint_24px),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
 
             Text(
                 text = period,
@@ -405,36 +588,64 @@ private fun EmptySchedule() {
 fun CustomTopAppBar(
     chosenWeek: String = "21.04 - 27.04",
     personName: String? = "None",
-    onBellClick: () -> Unit = {}
+    onBellClick: () -> Unit = {},
+    periodsInfo: StudentPeriods?
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 6.dp, top = 10.dp)
+            .padding(bottom = 6.dp, top = 6.dp)
             .padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        UserAvatarCircle(personName)
-
         WeekChooserList(
             chosenWeek = chosenWeek,
             onWeekChosen = { week ->
                 Log.d("DiaryScreen", "Week chosen: $week")
-            }
+            },
+            periodsInfo = periodsInfo
         )
 
-        IconButton(
-            onClick = {
-
-            }
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.bell_24px),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(28.dp),
-            )
+            BellIcon()
+
+            UserAvatarCircle(personName)
         }
+    }
+
+}
+
+@Composable
+private fun BellIcon(somethingNew: Boolean = true) {
+    BadgedBox(
+        badge = {
+            if (somethingNew) {
+                Badge(
+                    modifier = Modifier,
+                    containerColor = Color.Red,
+                    contentColor = Color.White
+                )
+            }
+        }
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.bell_24px),
+            contentDescription = null,
+            modifier = Modifier
+                .size(28.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {
+
+                    }
+                )
+        )
     }
 
 }
@@ -442,44 +653,77 @@ fun CustomTopAppBar(
 @Composable
 fun WeekChooserList(
     chosenWeek: String = "21.04 - 27.04",
-    availableWeeks: List<String> = listOf("21.04 - 27.04", "21.04 - 27.04", "21.04 - 27.04"),
+    periodsInfo: StudentPeriods?,
     onWeekChosen: (String) -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    val periods = periodsInfo?.periods?.map { it.name to it.weeks } ?: emptyList()
+
+    Log.d("DiaryScreen", "Periods: $periodsInfo")
     OutlinedCard(
         modifier = Modifier
             .wrapContentWidth()
             .wrapContentHeight(),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        onClick = {
+            expanded = !expanded
+        }
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(vertical = 8.dp)
+                .padding(start = 10.dp, end = 5.dp)
                 .align(Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.calendar_month_24px),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(21.dp)
+            )
+
+            Spacer(modifier = Modifier.width(3.dp))
             Text(
                 text = chosenWeek,
                 fontWeight = FontWeight.SemiBold,
             )
 
-            /*Spacer(modifier = Modifier.size(8.dp))
-
             Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(28.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {
-                            expanded = !expanded
-                            onWeekChosen(currentWeek)
-                        }
-                    )
-            )*/
+                    .size(24.dp)
+            )
+        }
+    }
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+    ) {
+        periods.forEach { (periodName, weeks) ->
+            val periodWeeks = weeks.map { it.start + " - " + it.end }
+
+            periodWeeks.forEach { week ->
+                val startOfWeek = week.split(" - ")[0]
+                val endOfWeek = week.split(" - ")[1]
+
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = "$startOfWeek - $endOfWeek",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                        )
+                    },
+                    onClick = {
+                        onWeekChosen(week)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }
