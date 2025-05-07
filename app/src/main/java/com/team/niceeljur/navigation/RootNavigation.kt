@@ -4,9 +4,15 @@ import android.content.Context
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -18,21 +24,29 @@ import androidx.navigation.compose.rememberNavController
 import com.team.feature_diary.presentation.screens.DiaryScreen
 import com.team.feature_login.data.model.TokenResult
 import com.team.feature_login.presentation.LoginScreen
+import com.team.feature_messages.presentation.MessagesScreen
 import com.team.feature_profile.presentation.ProfileScreen
 import com.team.niceeljur.R
 import com.team.niceeljur.navigation.RootNavDestinations.Diary
 import com.team.niceeljur.navigation.RootNavDestinations.FinalGrades
 import com.team.niceeljur.navigation.RootNavDestinations.Marks
 import com.team.niceeljur.navigation.RootNavDestinations.Messages
+import com.team.niceeljur.navigation.RootNavDestinations.More
 import com.team.niceeljur.navigation.bottomNavigation.BottomNavBar
 import com.team.niceeljur.navigation.bottomNavigation.BottomNavItem
+import com.team.niceeljur.navigation.components.MoreBottomSheet
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RootNavigation() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     val rootNavController = rememberNavController()
 
@@ -61,12 +75,21 @@ fun RootNavigation() {
     }
 
     val bottomNavDestinations = listOf(
-        RootNavDestinations.Homework.route,
         Diary.route,
         Marks.route,
+        RootNavDestinations.Homework.route,
         Messages.route,
+        More.route,
         FinalGrades.route
     )
+
+    if (showBottomSheet) {
+        MoreBottomSheet(
+            sheetState = sheetState,
+            onDismiss = { showBottomSheet = false },
+            navController = rootNavController
+        )
+    }
 
     Scaffold(
         bottomBar = {
@@ -99,12 +122,17 @@ fun RootNavigation() {
                             unselectedIcon = ImageVector.vectorResource(id = R.drawable.forum_24px_not_filled)
                         ),
                         BottomNavItem(
-                            route = RootNavDestinations.More.route,
+                            route = More.route,
                             labelRes = R.string.more,
                             selectedIcon = ImageVector.vectorResource(id = R.drawable.menu_24px),
                             unselectedIcon = ImageVector.vectorResource(id = R.drawable.menu_24px)
                         )
-                    )
+                    ),
+                    onMoreClick = {
+                        scope.launch {
+                            showBottomSheet = true
+                        }
+                    }
                 )
             }
         }
@@ -135,7 +163,11 @@ fun RootNavigation() {
             }
 
             composable(RootNavDestinations.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    onBackClick = {
+                        rootNavController.popBackStack()
+                    }
+                )
             }
 
             composable(Marks.route) {
@@ -143,11 +175,15 @@ fun RootNavigation() {
             }
 
             composable(Messages.route) {
-                // MessagesScreen(navController = rootNavController)
+                MessagesScreen()
             }
 
             composable(FinalGrades.route) {
                 // FinalGradesScreen(navController = rootNavController)
+            }
+
+            composable(RootNavDestinations.Homework.route) {
+                // HomeworkScreen(navController = rootNavController)
             }
         }
     }

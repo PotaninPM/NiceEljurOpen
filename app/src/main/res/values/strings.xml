@@ -5,4 +5,9 @@
     <string name="homework">Домашка</string>
     <string name="messages">Письма</string>
     <string name="more">Ещё</string>
+    <string name="final_grades">Final Grades</string>
+    <string name="about_us">О нас</string>
+    <string name="announcements">Объявления</string>
+    <string name="settings">Settings</string>
+    <string name="rating">Rating</string>
 </resources>

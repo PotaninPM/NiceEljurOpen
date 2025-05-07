@@ -9,6 +9,7 @@ import com.team.feature_diary.domain.model.StudentInfo
 import com.team.feature_diary.domain.repository.DiaryRepository
 import com.team.feature_diary.presentation.state.DiaryState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -43,7 +44,7 @@ class DiaryViewModel @Inject constructor(
     }
 
     private fun updateStudentInfo(token: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             state = state.copy(isLoading = true, error = null)
 
             repository.getStudentInfo(token)
@@ -63,7 +64,7 @@ class DiaryViewModel @Inject constructor(
     }
 
     private fun loadDiary(token: String, studentId: String, days: String? = null) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.getDiary(token, studentId, days)
                 .onSuccess { diary ->
                     state = state.copy(
@@ -82,7 +83,7 @@ class DiaryViewModel @Inject constructor(
     }
 
     private fun loadPeriods(token: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.getPeriods(token)
                 .onSuccess { periods ->
                     state = state.copy(
