@@ -23,9 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
@@ -62,9 +59,9 @@ import com.team.feature_diary.data.model.Lesson
 import com.team.feature_diary.data.model.StudentDiary
 import com.team.feature_diary.data.model.StudentPeriods
 import com.team.feature_diary.presentation.components.CalendarDialog
-import com.team.feature_diary.presentation.viewModels.DiaryViewModel
 import com.team.feature_diary.presentation.components.UserAvatarCircle
 import com.team.feature_diary.presentation.state.DiaryState
+import com.team.feature_diary.presentation.viewModels.DiaryViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
@@ -77,6 +74,7 @@ import java.util.Locale
 @Composable
 fun DiaryScreen(
     navController: NavController = rememberNavController(),
+    onProfileIconClick: () -> Unit = {},
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
@@ -117,6 +115,7 @@ fun DiaryScreen(
     } else {
         DiaryScreenContent(
             state = state,
+            onProfileIconClick = onProfileIconClick,
             onCalendarClick = {
                 calenderClicked = !calenderClicked
             }
@@ -127,6 +126,7 @@ fun DiaryScreen(
 @Composable
 private fun DiaryScreenContent(
     state: DiaryState,
+    onProfileIconClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -150,6 +150,7 @@ private fun DiaryScreenContent(
         CustomTopAppBar(
             chosenWeek = chosenWeek,
             personName = state.studentInfo?.name,
+            onProfileIconClick = onProfileIconClick,
             onBellClick = {
 
             },
@@ -604,6 +605,7 @@ fun CustomTopAppBar(
     chosenWeek: String = "21.04 - 27.04",
     personName: String? = "None",
     onBellClick: () -> Unit = {},
+    onProfileIconClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
     periodsInfo: StudentPeriods?
 ) {
@@ -631,7 +633,10 @@ fun CustomTopAppBar(
         ) {
             BellIcon()
 
-            UserAvatarCircle(personName)
+            UserAvatarCircle(
+                title = personName,
+                onIconClick = onProfileIconClick
+            )
         }
     }
 

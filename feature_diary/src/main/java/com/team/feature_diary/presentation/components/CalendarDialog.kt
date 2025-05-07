@@ -29,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.Font
@@ -39,6 +42,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import java.time.LocalDate
 import java.time.Month
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun CalendarDialog(
@@ -62,7 +67,7 @@ private fun CalendarDialogContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppCalendarMenu(
             onBackClick = onBackClick
@@ -99,9 +104,13 @@ private fun CalendarDaysView(
 @Composable
 fun MonthSwitcherBar(
     modifier: Modifier = Modifier,
-    onPreviousClick: () -> Unit = {},
-    onNextClick: () -> Unit = {},
+    onPreviousClick: (LocalDate) -> Unit = {},
+    onNextClick: (LocalDate) -> Unit = {},
 ) {
+    val currentTime by remember { mutableStateOf(LocalDate.now()) }
+    val chosenMonth = currentTime.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val chosenYear = currentTime.year
+
     Card(
         modifier = Modifier
             .padding(horizontal = 12.dp),
@@ -122,12 +131,16 @@ fun MonthSwitcherBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .clickable {
+
+                        }
                 )
             //}
 
             Text(
-                text = "Май 2025",
+                text = "$chosenMonth $chosenYear",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -141,7 +154,11 @@ fun MonthSwitcherBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .clickable {
+
+                        }
                 )
             //}
         }
