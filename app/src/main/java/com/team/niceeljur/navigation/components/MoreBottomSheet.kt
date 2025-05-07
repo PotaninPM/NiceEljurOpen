@@ -119,7 +119,7 @@ private fun MoreItem(
                     imageVector = icon,
                     contentDescription = title,
                     modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.primary
                 )
 
                 Text(
