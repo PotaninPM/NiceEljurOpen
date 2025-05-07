@@ -87,6 +87,8 @@ fun DiaryScreen(
 
     var calenderClicked by remember { mutableStateOf(false) }
 
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+
     LaunchedEffect(Unit) {
         viewModel.loadStudentInfo(
             token = jwtToken!!,
@@ -105,6 +107,7 @@ fun DiaryScreen(
     }
     if (calenderClicked) {
         CalendarDialog(
+            selectedDate = selectedDate,
             onDismissRequest = {
                 calenderClicked = !calenderClicked
             },
@@ -118,6 +121,9 @@ fun DiaryScreen(
             onProfileIconClick = onProfileIconClick,
             onCalendarClick = {
                 calenderClicked = !calenderClicked
+            },
+            onDateSelected = {
+                selectedDate = it
             }
         )
     }
@@ -126,6 +132,7 @@ fun DiaryScreen(
 @Composable
 private fun DiaryScreenContent(
     state: DiaryState,
+    onDateSelected: (LocalDate) -> Unit,
     onProfileIconClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
 ) {
@@ -163,7 +170,10 @@ private fun DiaryScreenContent(
         WeekCalendar(
             diary = state.weekDiary,
             selectedDate = selectedDate,
-            onDateSelected = { selectedDate = it },
+            onDateSelected = {
+                selectedDate = it
+                onDateSelected(it)
+            },
             onWeekChanged = { startOfWeek, endOfWeek ->
 
             }

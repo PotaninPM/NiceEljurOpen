@@ -27,5 +27,17 @@ sealed class RootNavDestinations(val route: String) {
     data object Messages : RootNavDestinations("messages")
 
     @Serializable
+    data object Announcements : RootNavDestinations("messages")
+
+    @Serializable
     data object FinalGrades : RootNavDestinations("final_grades")
+
+    @Serializable
+    data object Settings : RootNavDestinations("settings")
+
+    @Serializable
+    data object About : RootNavDestinations("about")
+
+    @Serializable
+    data object Rating : RootNavDestinations("about")
 }

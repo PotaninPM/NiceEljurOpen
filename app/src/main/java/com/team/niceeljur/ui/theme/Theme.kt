@@ -16,7 +16,8 @@ private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80,
-    background = Color(0xFF000000)
+    background = Color(0xFF000000),
+
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -54,12 +55,12 @@ fun NiceEljurTheme(
         else -> LightColorScheme
     }
 
-    val overrideScheme = colorScheme.copy(
-        background = if (darkTheme) Color.Black else colorScheme.background
-    )
+ /*   val overrideScheme = colorScheme.copy(
+        background = if (darkTheme) Color.Black else colorScheme.surface
+    )*/
 
     MaterialTheme(
-        colorScheme = overrideScheme,
+        colorScheme = colorScheme,
         typography = Typography,
         content = content
     )

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -20,11 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.team.niceeljur.navigation.RootNavDestinations
+import com.team.niceeljur.navigation.components.CustomNavBarItem
 
 @Composable
 fun BottomNavBar(
     navController: NavHostController,
     destinations: List<BottomNavItem>,
+    onMoreClick: () -> Unit = {}
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -50,12 +52,16 @@ fun BottomNavBar(
                 CustomNavBarItem(
                     selected = isSelected,
                     onClick = {
-                        navController.navigate(destination.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                        if (destination.route == RootNavDestinations.More.route) {
+                            onMoreClick()
+                        } else {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     },
                     icon = if (isSelected) destination.selectedIcon else destination.unselectedIcon,
