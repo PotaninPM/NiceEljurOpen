@@ -1,13 +1,13 @@
 <resources>
     <string name="app_name" translatable="false">NiceEljur</string>
-    <string name="diary">Дневник</string>
-    <string name="marks">Оценки</string>
-    <string name="homework">Домашка</string>
-    <string name="messages">Письма</string>
-    <string name="more">Ещё</string>
+    <string name="diary">Diary</string>
+    <string name="marks">Grades</string>
+    <string name="homework">Homework</string>
+    <string name="messages">Messages</string>
+    <string name="more">More</string>
     <string name="final_grades">Final Grades</string>
-    <string name="about_us">О нас</string>
-    <string name="announcements">Объявления</string>
+    <string name="about_us">About us</string>
+    <string name="announcements">Announcements</string>
     <string name="settings">Settings</string>
-    <string name="rating">Rating</string>
+    <string name="rating">Scoreboard</string>
 </resources>
