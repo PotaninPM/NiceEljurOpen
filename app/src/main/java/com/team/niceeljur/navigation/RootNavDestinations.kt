@@ -9,6 +9,9 @@ sealed class RootNavDestinations(val route: String) {
     data object Diary : RootNavDestinations("diary")
 
     @Serializable
+    data object Profile : RootNavDestinations("profile")
+
+    @Serializable
     data object Marks : RootNavDestinations("marks")
 
     @Serializable

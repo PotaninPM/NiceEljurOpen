@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/feature_login" />
             <option value="$PROJECT_DIR$/feature_marks" />
             <option value="$PROJECT_DIR$/feature_messages" />
+            <option value="$PROJECT_DIR$/feature_profile" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
