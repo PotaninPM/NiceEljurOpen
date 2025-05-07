@@ -38,8 +38,7 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
             -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
             -F document=@"${GITHUB_WORKSPACE}/app/build/outputs/apk/debug/app-debug.apk" \
-            -F caption=$'✅ Все прошло супер!\nВот новая дебаг‑версия.\nКомментарий: *'"$COMMENT"'*'
-            -F parse_mode=Markdown
+            -F caption=$'✅ Все прошло супер!\nВот новая дебаг‑версия.\nКомментарий: '"$COMMENT"''
 #          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
 #            -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
 #            -F document=@"${GITHUB_WORKSPACE}/app/build/outputs/apk/release/app-release-unsigned.apk" \
