@@ -29,6 +29,17 @@ jobs:
       - name: Telegram Success
         if: ${{ success() }}
         run: |
+          messages=(
+            "Вечерок в хату, тут обнова подъехала"
+            "Смотрим, что там наш CI натворил и радуемся"
+            "Сборка прошла на ура, качайте новую версию"
+            "Баги в отпуске, мы релизнули апдейт"
+            "Новая бача готова! Забирай скорей"
+          )
+          
+          idx=$(( RANDOM % ${#messages[@]} ))
+          random_msg="${messages[$idx]}"
+          
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             COMMENT="${{ github.event.pull_request.title }}"
           else
@@ -38,7 +49,7 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
             -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
             -F document=@"${GITHUB_WORKSPACE}/app/build/outputs/apk/debug/app-debug.apk" \
-            -F caption=$'✅ Все прошло супер!\nВот новая дебаг‑версия.\nКомментарий: '"$COMMENT"''
+            -F caption=$'✅ ${random_msg}\n\nВот новая дебаг‑версия.\nКомментарий: *'"$COMMENT"'*'
 #          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
 #            -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
 #            -F document=@"${GITHUB_WORKSPACE}/app/build/outputs/apk/release/app-release-unsigned.apk" \
