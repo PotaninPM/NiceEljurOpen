@@ -40,6 +40,7 @@ private fun ProfileScreenContent(
             "Mike Potanin",
             "Student"
         )
+
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
             contentDescription = null

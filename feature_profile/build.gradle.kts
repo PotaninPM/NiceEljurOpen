@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.niceeljur.feature_profile"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
