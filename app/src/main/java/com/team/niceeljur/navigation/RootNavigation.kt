@@ -22,8 +22,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.team.feature_diary.presentation.screens.DiaryScreen
+import com.team.feature_homework.presentation.HomeworkScreen
 import com.team.feature_login.data.model.TokenResult
 import com.team.feature_login.presentation.LoginScreen
+import com.team.feature_marks.presentation.MarksScreen
 import com.team.feature_messages.presentation.MessagesScreen
 import com.team.feature_profile.presentation.ProfileScreen
 import com.team.niceeljur.R
@@ -171,7 +173,7 @@ fun RootNavigation() {
             }
 
             composable(Marks.route) {
-                // MarksScreen(navController = rootNavController)
+                MarksScreen()
             }
 
             composable(Messages.route) {
@@ -183,7 +185,7 @@ fun RootNavigation() {
             }
 
             composable(RootNavDestinations.Homework.route) {
-                // HomeworkScreen(navController = rootNavController)
+                HomeworkScreen()
             }
         }
     }

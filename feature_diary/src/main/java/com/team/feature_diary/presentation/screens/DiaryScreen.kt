@@ -138,6 +138,13 @@ private fun DiaryScreenContent(
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
+    val defaultDate = LocalDate.now().let {
+        it.minusDays(it.dayOfWeek.value.toLong() - 1).let { startOfWeek ->
+            val endOfWeek = startOfWeek.plusDays(6)
+            "${startOfWeek.format(DateTimeFormatter.ofPattern("dd.MM"))} - ${endOfWeek.format(DateTimeFormatter.ofPattern("dd.MM"))}"
+        }
+    }
+
     val chosenWeek = state.weekDiary?.let {
         val startDate = it.days.keys.first().let { key ->
             LocalDate.parse(key, DateTimeFormatter.BASIC_ISO_DATE)
@@ -146,7 +153,7 @@ private fun DiaryScreenContent(
             LocalDate.parse(key, DateTimeFormatter.BASIC_ISO_DATE)
         }.plusDays(1)
         "${startDate.format(DateTimeFormatter.ofPattern("dd.MM"))} - ${endDate.format(DateTimeFormatter.ofPattern("dd.MM"))}"
-    } ?: ""
+    } ?: defaultDate
 
     Column(
         modifier = Modifier
@@ -612,7 +619,7 @@ private fun EmptySchedule() {
 
 @Composable
 fun CustomTopAppBar(
-    chosenWeek: String = "21.04 - 27.04",
+    chosenWeek: String,
     personName: String? = "None",
     onBellClick: () -> Unit = {},
     onProfileIconClick: () -> Unit = {},

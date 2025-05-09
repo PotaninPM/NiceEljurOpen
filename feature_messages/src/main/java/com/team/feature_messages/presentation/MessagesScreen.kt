@@ -1,34 +1,36 @@
 package com.team.feature_messages.presentation
 
-import com.team.feature_messages.data.model.Message
-import com.team.feature_messages.data.model.MessageFolder
 import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.team.feature_messages.data.model.Message
+import com.team.feature_messages.data.model.MessageFolder
 import com.team.feature_messages.presentation.viewmodel.MessagesUiState
 import com.team.feature_messages.presentation.viewmodel.MessagesViewModel
 
@@ -64,7 +66,7 @@ fun MessagesScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = padding.calculateTopPadding())
         ) {
             MessagesTabs(
                 currentFolder = uiState.currentFolder,
@@ -87,7 +89,21 @@ private fun MessagesTopBar(
     unreadOnly: Boolean,
     onUnreadOnlyChange: (Boolean) -> Unit
 ) {
-    TopAppBar(
+    var selectedFilter by remember { mutableStateOf("All") }
+
+    CustomSearchBar(
+        query = searchQuery,
+        onQueryChange = {
+            onSearchQueryChange(it)
+        },
+        onSearch = {
+
+        },
+        filterOptions = listOf("All", "Unread", "Starred"),
+        selectedFilter = selectedFilter,
+        onFilterSelected = { selectedFilter = it }
+    )
+    /*TopAppBar(
         title = {
             CustomSearchBar(
                 query = searchQuery,
@@ -112,76 +128,102 @@ private fun MessagesTopBar(
                 )
             }
         }
-    )
+    )*/
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search...",
-    onSearch: () -> Unit = {}
+    placeholder: String = "Search…",
+    onSearch: () -> Unit = {},
+    filterOptions: List<String> = listOf("All", "Unread", "Starred"),
+    selectedFilter: String = filterOptions.first(),
+    onFilterSelected: (String) -> Unit
 ) {
-    var focused by remember { mutableStateOf(false) }
+    var focusState by remember { mutableStateOf(false) }
+    var showFilterPopup by remember { mutableStateOf(false) }
+    val filterIconPosition = remember { mutableStateOf(Offset.Zero) }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(
-                width = 1.dp,
-                color = if (focused) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Box(modifier = Modifier.weight(1f)) {
-                if (query.isEmpty() && !focused) {
-                    Text(
-                        text = placeholder,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = { Text(placeholder) },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                disabledTextColor = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .onFocusChanged { focusState = it.isFocused }
+                .padding(horizontal = 10.dp),
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            },
+            trailingIcon = {
+                Row {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Filter",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .onGloballyPositioned { coords ->
+                                filterIconPosition.value = coords.localToWindow(Offset.Zero)
+                            }
+                            .clickable { showFilterPopup = !showFilterPopup }
                     )
                 }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onFocusChanged { focused = it.isFocused }
-                        .padding(vertical = 8.dp)
-                        .imeAction(ImeAction.Search, onSearch)
-                )
             }
-            if (query.isNotEmpty()) {
-                Spacer(modifier = Modifier.width(12.dp))
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+        )
+
+        if (showFilterPopup) {
+            Popup(
+                offset = IntOffset(
+                    x = filterIconPosition.value.x.toInt(),
+                    y = (filterIconPosition.value.y + with(LocalDensity.current) { 24.dp.toPx() }).toInt()
+                ),
+                onDismissRequest = { showFilterPopup = false }
+            ) {
+                Card(
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    modifier = Modifier.width(150.dp)
+                ) {
+                    Column {
+                        filterOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    onFilterSelected(option)
+                                    showFilterPopup = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
+
 
 private fun Modifier.imeAction(
     imeAction: ImeAction,
@@ -208,13 +250,7 @@ private fun MessagesTabs(
             Tab(
                 selected = folder == currentFolder,
                 onClick = { onFolderSelected(folder) },
-                text = { Text(folder.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                icon = {
-                    Icon(
-                        if (folder == MessageFolder.INBOX) Icons.Default.MailOutline else Icons.Default.Send,
-                        contentDescription = null
-                    )
-                }
+                text = { Text(folder.name.lowercase().replaceFirstChar { it.uppercase() }) }
             )
         }
     }
@@ -226,15 +262,18 @@ private fun MessagesContent(
     onLoadMore: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         if (uiState.isLoading && uiState.messages.isEmpty()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
             ) {
                 items(uiState.messages) { message ->
                     MessageItem(message = message)
@@ -276,11 +315,13 @@ private fun MessagesContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MessageItem(message: Message) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         onClick = { /* Handle message click */ }
     ) {
         Column(
