@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team.common.PreferencesManager
+import com.team.feature_homework.data.model.HomeworkItem
+import com.team.feature_homework.data.model.LessonFile
 import com.team.feature_homework.domain.HomeworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,16 +19,16 @@ import javax.inject.Inject
 data class HomeworkUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val homeworkByDay: Map<String, List<HomeworkItem>> = emptyMap()
+    val homeworkByDay: Map<String, List<HomeworkItemModel>> = emptyMap()
 )
 
-data class HomeworkItem(
+data class HomeworkItemModel(
     val subject: String,
-    val homework: String,
+    val homework: List<HomeworkItem>,
     val teacher: String,
     val time: String,
     val topic: String?,
-    val files: List<String>
+    val files: List<LessonFile>
 )
 
 @HiltViewModel
@@ -71,13 +73,13 @@ class HomeworkViewModel @Inject constructor(
                                 .filter { it.homework.isNotEmpty() }
                                 .sortedBy { it.sort }
                                 .map { lesson ->
-                                    HomeworkItem(
+                                    HomeworkItemModel(
                                         subject = lesson.name,
-                                        homework = lesson.homework.values.joinToString("\n"),
+                                        homework = lesson.homework.values.toList(),
                                         teacher = lesson.teacher,
                                         time = "${lesson.starttime} - ${lesson.endtime}",
                                         topic = lesson.topic,
-                                        files = lesson.files.map { it.link }
+                                        files = lesson.files
                                     )
                                 }
                         }
