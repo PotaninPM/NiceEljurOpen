@@ -20,7 +20,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.feature_marks.data.model.LessonMarks
@@ -51,7 +52,7 @@ import com.team.feature_marks.presentation.viewmodel.MarksViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarksScreen(
     viewModel: MarksViewModel = hiltViewModel(),
@@ -92,13 +93,7 @@ fun MarksScreen(
                 title = { Text("Оценки") },
                 actions = {
                     IconButton(onClick = { /* Refresh */ }) {
-                        Icon(
-                            if (uiState.displayMode == MarksDisplayMode.BySubject) 
-                                Icons.Default.MailOutline
-                            else 
-                                Icons.Default.DateRange,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.MoreVert, contentDescription = null)
                     }
                 }
             )
@@ -167,7 +162,7 @@ private fun SubjectMarksList(marks: List<LessonMarks>) {
 @Composable
 private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
     val sortedDates = remember(marksByDate) {
-        marksByDate.keys.sortedDescending()
+        marksByDate.keys.sortedBy { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyyMMdd")) }
     }
 
     LazyColumn(
@@ -176,7 +171,7 @@ private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(sortedDates) { date ->
-            DateMarksCard(
+            DayMarksCard(
                 date = date,
                 marks = marksByDate[date] ?: emptyList()
             )
@@ -228,9 +223,13 @@ private fun LessonMarksCard(lesson: LessonMarks) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DateMarksCard(date: String, marks: List<Mark>) {
+private fun DayMarksCard(
+    date: String,
+    marks: List<Mark>
+) {
     val formattedDate = remember(date) {
-        LocalDate.parse(date).format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"))
+            .format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
     }
 
     ElevatedCard(
@@ -249,20 +248,56 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
             Spacer(modifier = Modifier.height(8.dp))
 
             marks.forEach { mark ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = mark.lessonComment ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MarkBadge(mark = mark)
-                }
+                MarkItemCard(mark = mark)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MarkItemCard(mark: Mark) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = mark.lessonComment ?: "",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                MarkBadge(mark = mark)
+            }
+
+            if (mark.comment != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = mark.comment,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (mark.mtype != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = mark.mtype.short,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -281,14 +316,12 @@ private fun MarkBadge(mark: Mark) {
         ) {
             Text(
                 text = mark.value,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.bodyLarge
             )
-            mark.mtype?.let { type ->
+            if (mark.weight != null) {
                 Text(
-                    text = type.short,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center
+                    text = "×${mark.weight}",
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
         }
