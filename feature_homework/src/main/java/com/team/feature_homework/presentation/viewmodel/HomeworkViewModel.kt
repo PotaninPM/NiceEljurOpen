@@ -107,7 +107,6 @@ class HomeworkViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("HomeworkViewModel", "Error loading homework", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,

@@ -1,5 +1,6 @@
 package com.team.feature_homework.presentation
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -207,13 +209,20 @@ fun HomeworkItemCard(item: HomeworkItemModel) {
 
         item.homework.forEach { homework ->
             var done by remember(homework) { mutableStateOf(false) }
+            var lineCount by remember(homework) { mutableIntStateOf(0) }
+
+            val alignment = if (lineCount <= 1) {
+                Alignment.CenterVertically
+            } else {
+                Alignment.Top
+            }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { done = !done }
                     .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = alignment,
             ) {
                 CustomCheckBoxItem(
                     checked = done,
@@ -233,7 +242,11 @@ fun HomeworkItemCard(item: HomeworkItemModel) {
                         TextDecoration.LineThrough
                     else
                         TextDecoration.None,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f),
+                    onTextLayout = { textLayoutResult ->
+                        lineCount = textLayoutResult.lineCount
+                    }
                 )
             }
 
@@ -298,12 +311,12 @@ fun CustomCheckBoxItem(
             .size(size)
             .clip(RoundedCornerShape(12.dp))
             .background(
-                if (checked) Color(63, 218, 0, 255).copy(alpha = 0.75f)
+                if (checked) Color(0, 100, 255).copy(alpha = 0.8f)
                 else MaterialTheme.colorScheme.surfaceVariant
             )
             .border(
                 width = 2.dp,
-                color = if (checked) Color(63, 218, 0, 255).copy(alpha = 0.4f)
+                color = if (checked) Color(0, 100, 255).copy(alpha = 0.4f)
                 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -314,7 +327,7 @@ fun CustomCheckBoxItem(
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.surface,
+                tint = Color.White,
                 modifier = Modifier.size(size * 0.7f)
             )
         }
