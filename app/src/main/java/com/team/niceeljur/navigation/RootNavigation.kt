@@ -65,17 +65,6 @@ fun RootNavigation() {
         Diary.route
     }
 
-    val onLoginSuccess = { tokenInfo: TokenResult? ->
-        sharedPrefs.edit().putString("jwt_token", tokenInfo?.token).apply()
-        sharedPrefs.edit().putString("jwt_token_expires", tokenInfo?.expires).apply()
-
-        rootNavController.navigate(Diary.route) {
-            popUpTo(RootNavDestinations.Login.route) {
-                inclusive = true
-            }
-        }
-    }
-
     val bottomNavDestinations = listOf(
         Diary.route,
         Marks.route,
@@ -150,8 +139,12 @@ fun RootNavigation() {
         ) {
             composable(RootNavDestinations.Login.route) {
                 LoginScreen(
-                    onLoginSuccess = { token ->
-                        onLoginSuccess(token)
+                    onLoginSuccess = {
+                        rootNavController.navigate(Diary.route) {
+                            popUpTo(RootNavDestinations.Login.route) {
+                                inclusive = true
+                            }
+                        }
                     }
                 )
             }

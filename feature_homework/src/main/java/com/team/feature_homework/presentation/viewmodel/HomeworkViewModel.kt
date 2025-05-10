@@ -3,9 +3,7 @@ package com.team.feature_homework.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.team.common.data.local.PreferencesManager
-import com.team.feature_homework.data.model.Day
-import com.team.feature_homework.data.model.LessonItem
+import com.team.common.PreferencesManager
 import com.team.feature_homework.domain.HomeworkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

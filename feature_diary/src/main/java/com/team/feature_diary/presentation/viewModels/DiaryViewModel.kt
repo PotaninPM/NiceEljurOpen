@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.team.common.data.local.PreferencesManager
+import com.team.common.PreferencesManager
 import com.team.feature_diary.domain.model.StudentInfo
 import com.team.feature_diary.domain.repository.DiaryRepository
 import com.team.feature_diary.presentation.state.DiaryState

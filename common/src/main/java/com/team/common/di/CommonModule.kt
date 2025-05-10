@@ -1,7 +1,7 @@
 package com.team.common.di
 
 import android.content.Context
-import com.team.common.data.local.PreferencesManager
+import com.team.common.PreferencesManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.team.common.PreferencesManager
 import com.team.feature_login.domain.repository.LoginRepository
 import com.team.feature_login.presentation.state.LoginState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val repository: LoginRepository
+    private val repository: LoginRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     var state by mutableStateOf(LoginState())
@@ -53,6 +55,9 @@ class LoginViewModel @Inject constructor(
 
             repository.login(state.username, state.password)
                 .onSuccess { result ->
+                    preferencesManager.saveAuthToken(result.token)
+                    preferencesManager.saveAuthTokenExpires(result.expires)
+
                     state = state.copy(
                         isLoading = false,
                         isSuccess = true,

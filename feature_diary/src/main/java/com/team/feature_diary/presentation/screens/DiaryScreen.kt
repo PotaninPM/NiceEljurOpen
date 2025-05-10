@@ -1,6 +1,5 @@
 package com.team.feature_diary.presentation.screens
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,13 +44,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.team.feature_diary.R
 import com.team.feature_diary.data.model.DaySchedule
 import com.team.feature_diary.data.model.HomeworkItem
@@ -85,6 +81,7 @@ fun DiaryScreen(
     LaunchedEffect(Unit) {
         viewModel.loadStudentInfo()
     }
+
     if (calenderClicked) {
         CalendarDialog(
             selectedDate = selectedDate,

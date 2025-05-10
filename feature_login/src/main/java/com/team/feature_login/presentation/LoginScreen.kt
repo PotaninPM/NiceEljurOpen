@@ -55,13 +55,13 @@ import com.team.feature_login.presentation.state.LoginState
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (TokenResult?) -> Unit,
+    onLoginSuccess: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
 
     if (state.isSuccess) {
-        onLoginSuccess(state.tokenInfo)
+        onLoginSuccess()
         return
     }
 

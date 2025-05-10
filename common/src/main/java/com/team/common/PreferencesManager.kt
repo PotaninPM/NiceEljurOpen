@@ -1,4 +1,4 @@
-package com.team.common.data.local
+package com.team.common
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -35,6 +35,10 @@ class PreferencesManager @Inject constructor(
         prefs.edit().putString(KEY_AUTH_TOKEN, token).apply()
     }
 
+    fun saveAuthTokenExpires(date: String) {
+        prefs.edit().putString(KEY_AUTH_TOKEN_EXPIRES, date).apply()
+    }
+
     fun saveStudentName(name: String) {
         prefs.edit().putString(STUDENT_NAME, name).apply()
     }
@@ -46,6 +50,7 @@ class PreferencesManager @Inject constructor(
     companion object {
         const val PREFS_NAME = "niceeljur"
         const val KEY_AUTH_TOKEN = "jwt_token"
+        const val KEY_AUTH_TOKEN_EXPIRES = "jwt_token_expires"
         const val KEY_STUDENT_ID = "student_id"
         const val STUDENT_NAME = "student_name"
         const val LAST_UPDATE_TIME = "last_student_info_update"
