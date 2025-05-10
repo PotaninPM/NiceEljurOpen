@@ -3,6 +3,7 @@ package com.team.feature_marks.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.team.common.PreferencesManager
 import com.team.feature_marks.data.model.LessonMarks
 import com.team.feature_marks.data.model.Mark
 import com.team.feature_marks.domain.MarksRepository
@@ -30,16 +31,20 @@ data class MarksUiState(
 
 @HiltViewModel
 class MarksViewModel @Inject constructor(
-    private val repository: MarksRepository
+    private val repository: MarksRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MarksUiState())
     val uiState: StateFlow<MarksUiState> = _uiState
 
-    fun loadMarks(authToken: String, studentId: String) {
+    fun loadMarks() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            Log.d("MarksViewModel", "Loading marks for student: $studentId")
+
+            val studentId = preferencesManager.getStudentId()
+            val authToken = preferencesManager.getAuthToken()
+
             try {
                 val days = generateDateRange()
                 val response = repository.getMarks(
@@ -48,11 +53,8 @@ class MarksViewModel @Inject constructor(
                     authToken = authToken
                 )
 
-                Log.d("MarksViewModel", "Response: ${response.response}")
-
                 if (response.response.state == 200 && response.response.result != null) {
                     val student = response.response.result.students[studentId]
-                    Log.d("MarksViewModel", "$studentId Student: ${response.response.result.students}")
 
                     if (student != null) {
                         val marksByDate = student.lessons.flatMap { lesson ->

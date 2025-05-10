@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.team.common.components.CustomProgressBar
 import com.team.common.functions.centerEllipsis
 import com.team.feature_homework.R
 import com.team.feature_homework.presentation.viewmodel.HomeworkItemModel
@@ -162,21 +163,7 @@ private fun DayHomeworkCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = formattedDate,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.Gray,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Text(
-                text = daysAfterThisText,
-                style = MaterialTheme.typography.titleSmall,
-                color = Color.Gray,
-                fontWeight = FontWeight.Normal
-            )
+            TopDayBar(formattedDate, daysAfterThisText, homework)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -194,6 +181,44 @@ private fun DayHomeworkCard(
         }
     }
 }
+
+@Composable
+private fun TopDayBar(
+    formattedDate: String,
+    daysAfterThisText: String,
+    homework: List<HomeworkItemModel>
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Column {
+            Text(
+                text = formattedDate,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Gray,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = daysAfterThisText,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.Gray,
+                fontWeight = FontWeight.Normal
+            )
+        }
+
+        CustomProgressBar(
+            progress = (homework.size).toFloat() / homework.size,
+            modifier = Modifier
+                .size(55.dp)
+        )
+    }
+}
+
 @Composable
 fun HomeworkItemCard(item: HomeworkItemModel) {
     Column(
