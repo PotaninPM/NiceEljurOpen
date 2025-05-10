@@ -3,12 +3,14 @@ package com.team.feature_marks.presentation
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +22,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,7 +45,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.feature_marks.data.model.LessonMarks
@@ -52,7 +57,7 @@ import com.team.feature_marks.presentation.viewmodel.MarksViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MarksScreen(
     viewModel: MarksViewModel = hiltViewModel(),
@@ -154,7 +159,7 @@ private fun SubjectMarksList(marks: List<LessonMarks>) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(marks) { lesson ->
-            LessonMarksCard(lesson = lesson)
+            SubjectMarksCard(lesson = lesson)
         }
     }
 }
@@ -162,7 +167,7 @@ private fun SubjectMarksList(marks: List<LessonMarks>) {
 @Composable
 private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
     val sortedDates = remember(marksByDate) {
-        marksByDate.keys.sortedBy { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyyMMdd")) }
+        marksByDate.keys.sortedDescending()
     }
 
     LazyColumn(
@@ -171,7 +176,7 @@ private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(sortedDates) { date ->
-            DayMarksCard(
+            DateMarksCard(
                 date = date,
                 marks = marksByDate[date] ?: emptyList()
             )
@@ -181,7 +186,7 @@ private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LessonMarksCard(lesson: LessonMarks) {
+private fun SubjectMarksCard(lesson: LessonMarks) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -197,25 +202,109 @@ private fun LessonMarksCard(lesson: LessonMarks) {
             ) {
                 Text(
                     text = lesson.name,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
                 )
                 lesson.average?.let { avg ->
-                    Text(
-                        text = "Средний балл: $avg",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    AverageScoreBadge(average = avg)
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
+            MarksGrid(marks = lesson.marks)
+        }
+    }
+}
+
+@Composable
+private fun AverageScoreBadge(average: String) {
+    Surface(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Text(
+            text = "Средний балл: $average",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun MarksGrid(marks: List<Mark>) {
+    val marksPerRow = 4
+    val rows = marks.chunked(marksPerRow)
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        rows.forEach { rowMarks ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                lesson.marks.forEach { mark ->
-                    MarkBadge(mark = mark)
+                rowMarks.forEach { mark ->
+                    MarkCard(
+                        mark = mark,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
+                // Fill remaining space with empty boxes to maintain grid
+                repeat(marksPerRow - rowMarks.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MarkCard(
+    mark: Mark,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .aspectRatio(1f),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = mark.value,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center
+            )
+            
+            mark.mtype?.let { type ->
+                Text(
+                    text = type.short,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            if (mark.comment != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = mark.comment,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2
+                )
             }
         }
     }
@@ -223,13 +312,9 @@ private fun LessonMarksCard(lesson: LessonMarks) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DayMarksCard(
-    date: String,
-    marks: List<Mark>
-) {
+private fun DateMarksCard(date: String, marks: List<Mark>) {
     val formattedDate = remember(date) {
-        LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"))
-            .format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        LocalDate.parse(date).format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
     }
 
     ElevatedCard(
@@ -248,56 +333,20 @@ private fun DayMarksCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             marks.forEach { mark ->
-                MarkItemCard(mark = mark)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MarkItemCard(mark: Mark) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = mark.lessonComment ?: "",
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.weight(1f)
-                )
-                MarkBadge(mark = mark)
-            }
-
-            if (mark.comment != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = mark.comment,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (mark.mtype != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = mark.mtype.short,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = mark.lessonComment ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MarkBadge(mark = mark)
+                }
             }
         }
     }
@@ -316,12 +365,14 @@ private fun MarkBadge(mark: Mark) {
         ) {
             Text(
                 text = mark.value,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
             )
-            if (mark.weight != null) {
+            mark.mtype?.let { type ->
                 Text(
-                    text = "×${mark.weight}",
-                    style = MaterialTheme.typography.bodySmall
+                    text = type.short,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center
                 )
             }
         }
