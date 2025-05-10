@@ -3,6 +3,7 @@ package com.team.feature_homework.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.team.common.data.local.PreferencesManager
 import com.team.feature_homework.data.model.Day
 import com.team.feature_homework.data.model.LessonItem
 import com.team.feature_homework.domain.HomeworkRepository
@@ -32,17 +33,31 @@ data class HomeworkItem(
 
 @HiltViewModel
 class HomeworkViewModel @Inject constructor(
-    private val repository: HomeworkRepository
+    private val repository: HomeworkRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeworkUiState())
     val uiState: StateFlow<HomeworkUiState> = _uiState
 
-    fun loadHomework(authToken: String, studentId: String) {
+    fun loadHomework() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
+                val studentId = preferencesManager.getStudentId()
+                val authToken = preferencesManager.getAuthToken()
+
+                if (studentId.isEmpty() || authToken.isEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Не удалось получить данные авторизации"
+                        )
+                    }
+                    return@launch
+                }
+
                 val days = generateDateRange()
                 val response = repository.getHomework(
                     student = studentId,

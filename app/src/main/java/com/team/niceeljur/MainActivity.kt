@@ -27,21 +27,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NiceEljurTheme {
-
-
-                var isLoggedIn by remember { mutableStateOf(false) }
-
-                Scaffold { paddingValues ->
-                    RootNavigation()
-                    /*if (!isLoggedIn) {
-
-                    } else {
-                        Text(
-                            text = "Welcome to the app!",
-                            modifier = Modifier.padding(paddingValues)
-                        )
-                    }*/
-                }
+                RootNavigation()
             }
         }
     }

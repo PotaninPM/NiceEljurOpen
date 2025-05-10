@@ -39,7 +39,7 @@ class MarksViewModel @Inject constructor(
     fun loadMarks(authToken: String, studentId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-
+            Log.d("MarksViewModel", "Loading marks for student: $studentId")
             try {
                 val days = generateDateRange()
                 val response = repository.getMarks(
@@ -48,8 +48,12 @@ class MarksViewModel @Inject constructor(
                     authToken = authToken
                 )
 
+                Log.d("MarksViewModel", "Response: ${response.response}")
+
                 if (response.response.state == 200 && response.response.result != null) {
                     val student = response.response.result.students[studentId]
+                    Log.d("MarksViewModel", "$studentId Student: ${response.response.result.students}")
+
                     if (student != null) {
                         val marksByDate = student.lessons.flatMap { lesson ->
                             lesson.marks.map { mark ->

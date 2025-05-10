@@ -1,6 +1,7 @@
 package com.team.feature_marks.presentation
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,10 +62,13 @@ fun MarksScreen(
         context.getSharedPreferences("niceeljur", Context.MODE_PRIVATE)
             .getString("jwt_token", "") ?: ""
     }
+
     val studentId = remember {
         context.getSharedPreferences("niceeljur", Context.MODE_PRIVATE)
             .getString("student_id", "") ?: ""
     }
+
+    Log.d("MarksScreen", "Auth token: $authToken Student ID: $studentId")
 
     val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { 2 })

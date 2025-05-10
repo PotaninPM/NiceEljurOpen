@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.team.common.data.local.PreferencesManager
 import com.team.feature_diary.domain.model.StudentInfo
 import com.team.feature_diary.domain.repository.DiaryRepository
 import com.team.feature_diary.presentation.state.DiaryState
@@ -18,14 +19,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
-    private val repository: DiaryRepository
+    private val repository: DiaryRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     var state by mutableStateOf(DiaryState())
         private set
 
-    fun loadStudentInfo(token: String, lastUpdateTime: Long, studentId: String?, studentName: String?) {
-        if (studentId != null && studentName != null) {
+    fun loadStudentInfo() {
+        val token = preferencesManager.getAuthToken()
+        val studentId = preferencesManager.getStudentId()
+        val studentName = preferencesManager.getStudentName()
+        val lastUpdateTime = preferencesManager.getLastUpdateTime()
+
+        if (studentId.isNotEmpty() && studentName.isNotEmpty()) {
             state = state.copy(
                 studentInfo = StudentInfo(
                     id = studentId,
@@ -49,6 +56,10 @@ class DiaryViewModel @Inject constructor(
 
             repository.getStudentInfo(token)
                 .onSuccess { studentInfo ->
+                    preferencesManager.saveStudentId(studentInfo.id)
+                    preferencesManager.saveStudentName(studentInfo.name)
+                    preferencesManager.saveLastUpdateTime(System.currentTimeMillis())
+
                     state = state.copy(
                         studentInfo = studentInfo
                     )

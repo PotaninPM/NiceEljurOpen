@@ -73,37 +73,17 @@ import java.util.Locale
 
 @Composable
 fun DiaryScreen(
-    navController: NavController = rememberNavController(),
     onProfileIconClick: () -> Unit = {},
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
-    val context = LocalContext.current
-    val sharedPrefs = context.getSharedPreferences("niceeljur", Context.MODE_PRIVATE)
-    val jwtToken = sharedPrefs.getString("jwt_token", "")
-    val lastUpdateTime = sharedPrefs.getLong("last_student_info_update", 0)
-    val studentId = sharedPrefs.getString("student_id", null)
-    val studentName = sharedPrefs.getString("student_name", null)
 
     var calenderClicked by remember { mutableStateOf(false) }
 
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
     LaunchedEffect(Unit) {
-        viewModel.loadStudentInfo(
-            token = jwtToken!!,
-            lastUpdateTime = lastUpdateTime,
-            studentId = studentId,
-            studentName = studentName
-        )
-
-        state.studentInfo?.let { studentInfo ->
-            sharedPrefs.edit()
-                .putLong("last_student_info_update", System.currentTimeMillis())
-                .putString("student_id", studentInfo.id)
-                .putString("student_name", studentInfo.name)
-                .apply()
-        }
+        viewModel.loadStudentInfo()
     }
     if (calenderClicked) {
         CalendarDialog(
