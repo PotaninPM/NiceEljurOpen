@@ -19,6 +19,8 @@ import javax.inject.Inject
 data class HomeworkUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
+    val personRole: String = "",
+    val personName: String = "",
     val homeworkByDay: Map<String, List<HomeworkItemModel>> = emptyMap()
 )
 
@@ -42,12 +44,21 @@ class HomeworkViewModel @Inject constructor(
 
     fun loadHomework() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            val studentId = preferencesManager.getPersonId()
+            val authToken = preferencesManager.getAuthToken()
+            val personName = preferencesManager.getPersonName()
+            val personRole = preferencesManager.getPersonRole()
+
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    personName = personName,
+                    personRole = personRole
+                )
+            }
 
             try {
-                val studentId = preferencesManager.getStudentId()
-                val authToken = preferencesManager.getAuthToken()
-
                 if (studentId.isEmpty() || authToken.isEmpty()) {
                     _uiState.update {
                         it.copy(

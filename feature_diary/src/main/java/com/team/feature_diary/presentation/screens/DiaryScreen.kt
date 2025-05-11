@@ -55,7 +55,9 @@ import com.team.feature_diary.data.model.Lesson
 import com.team.feature_diary.data.model.StudentDiary
 import com.team.feature_diary.data.model.StudentPeriods
 import com.team.feature_diary.presentation.components.CalendarDialog
-import com.team.feature_diary.presentation.components.UserAvatarCircle
+import com.team.common.components.UserAvatarCircle
+import com.team.common.components.icons.BellIcon
+import com.team.common.components.icons.SettingsIcon
 import com.team.feature_diary.presentation.state.DiaryState
 import com.team.feature_diary.presentation.viewModels.DiaryViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -595,7 +597,7 @@ private fun EmptySchedule() {
 }
 
 @Composable
-fun CustomTopAppBar(
+private fun CustomTopAppBar(
     chosenWeek: String,
     personName: String? = "None",
     onBellClick: () -> Unit = {},
@@ -611,6 +613,29 @@ fun CustomTopAppBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            UserAvatarCircle(
+                title = personName,
+                onIconClick = onProfileIconClick
+            )
+
+            SettingsIcon(
+                onSettingsClick = {
+
+                }
+            )
+
+            BellIcon(
+                onBellClick = {
+
+                }
+            )
+        }
+
         WeekChooserList(
             chosenWeek = chosenWeek,
             onWeekChosen = { week ->
@@ -619,55 +644,11 @@ fun CustomTopAppBar(
             onCalendarClick = onCalendarClick,
             periodsInfo = periodsInfo
         )
-
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            BellIcon()
-
-            UserAvatarCircle(
-                title = personName,
-                onIconClick = onProfileIconClick
-            )
-        }
     }
-
 }
 
 @Composable
-private fun BellIcon(somethingNew: Boolean = true) {
-    BadgedBox(
-        badge = {
-            if (somethingNew) {
-                Badge(
-                    modifier = Modifier,
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                )
-            }
-        }
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.bell_24px),
-            contentDescription = null,
-            modifier = Modifier
-                .size(28.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {
-
-                    }
-                )
-        )
-    }
-
-}
-
-@Composable
-fun WeekChooserList(
+private fun WeekChooserList(
     chosenWeek: String = "21.04 - 27.04",
     periodsInfo: StudentPeriods?,
     onCalendarClick: () -> Unit = {},

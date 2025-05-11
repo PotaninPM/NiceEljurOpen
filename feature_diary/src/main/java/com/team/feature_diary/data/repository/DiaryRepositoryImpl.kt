@@ -4,14 +4,14 @@ import android.util.Log
 import com.team.feature_diary.data.model.StudentDiary
 import com.team.feature_diary.data.model.StudentPeriods
 import com.team.feature_diary.data.remote.DiaryApi
-import com.team.feature_diary.domain.model.StudentInfo
+import com.team.feature_diary.domain.model.PersonInfo
 import com.team.feature_diary.domain.repository.DiaryRepository
 import javax.inject.Inject
 
 class DiaryRepositoryImpl @Inject constructor(
     private val api: DiaryApi
 ) : DiaryRepository {
-    override suspend fun getStudentInfo(token: String): Result<StudentInfo> {
+    override suspend fun getStudentInfo(token: String): Result<PersonInfo> {
         return try {
             val response = api.getRules(authToken = token)
 
@@ -20,9 +20,10 @@ class DiaryRepositoryImpl @Inject constructor(
 
                 if (student != null) {
                     Result.success(
-                        StudentInfo(
+                        PersonInfo(
                             id = student.key,
-                            name = student.value.title
+                            name = student.value.title,
+                            role = response.response.result.roles[0]
                         )
                     )
                 } else {

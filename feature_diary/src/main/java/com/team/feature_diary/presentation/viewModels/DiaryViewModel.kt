@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team.common.PreferencesManager
-import com.team.feature_diary.domain.model.StudentInfo
+import com.team.feature_diary.domain.model.PersonInfo
 import com.team.feature_diary.domain.repository.DiaryRepository
 import com.team.feature_diary.presentation.state.DiaryState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,22 +28,24 @@ class DiaryViewModel @Inject constructor(
 
     fun loadStudentInfo() {
         val token = preferencesManager.getAuthToken()
-        val studentId = preferencesManager.getStudentId()
-        val studentName = preferencesManager.getStudentName()
+        val personId = preferencesManager.getPersonId()
+        val personName = preferencesManager.getPersonName()
+        val personRole = preferencesManager.getPersonRole()
         val lastUpdateTime = preferencesManager.getLastUpdateTime()
 
-        if (studentId.isNotEmpty() && studentName.isNotEmpty()) {
+        if (personId.isNotEmpty() && personName.isNotEmpty()) {
             state = state.copy(
-                studentInfo = StudentInfo(
-                    id = studentId,
-                    name = studentName
+                studentInfo = PersonInfo(
+                    id = personId,
+                    name = personName,
+                    role = personRole
                 )
             )
 
             if (lastUpdateTime == 0L || hasOneMonthPassed(lastUpdateTime)) {
                 updateStudentInfo(token)
             } else {
-                loadDiary(token, studentId)
+                loadDiary(token, personId)
             }
         } else {
             updateStudentInfo(token)
@@ -56,8 +58,9 @@ class DiaryViewModel @Inject constructor(
 
             repository.getStudentInfo(token)
                 .onSuccess { studentInfo ->
-                    preferencesManager.saveStudentId(studentInfo.id)
-                    preferencesManager.saveStudentName(studentInfo.name)
+                    preferencesManager.savePersonId(studentInfo.id)
+                    preferencesManager.savePersonName(studentInfo.name)
+                    preferencesManager.savePersonRole(studentInfo.role)
                     preferencesManager.saveLastUpdateTime(System.currentTimeMillis())
 
                     state = state.copy(

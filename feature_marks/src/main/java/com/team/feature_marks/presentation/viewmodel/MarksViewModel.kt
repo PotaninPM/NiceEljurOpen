@@ -42,7 +42,7 @@ class MarksViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            val studentId = preferencesManager.getStudentId()
+            val studentId = preferencesManager.getPersonId()
             val authToken = preferencesManager.getAuthToken()
 
             try {

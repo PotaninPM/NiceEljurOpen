@@ -15,20 +15,24 @@ class PreferencesManager @Inject constructor(
         return prefs.getString(KEY_AUTH_TOKEN, "") ?: ""
     }
 
-    fun getStudentId(): String {
-        return prefs.getString(KEY_STUDENT_ID, "") ?: ""
+    fun getPersonId(): String {
+        return prefs.getString(KEY_PERSON_ID, "") ?: ""
     }
 
-    fun getStudentName(): String {
-        return prefs.getString(STUDENT_NAME, "") ?: ""
+    fun getPersonName(): String {
+        return prefs.getString(PERSON_NAME, "") ?: ""
+    }
+
+    fun getPersonRole(): String {
+        return prefs.getString(PERSON_ROLE, "") ?: ""
     }
 
     fun getLastUpdateTime(): Long {
         return prefs.getLong(LAST_UPDATE_TIME, 0L)
     }
 
-    fun saveStudentId(studentId: String) {
-        prefs.edit().putString(KEY_STUDENT_ID, studentId).apply()
+    fun savePersonId(studentId: String) {
+        prefs.edit().putString(KEY_PERSON_ID, studentId).apply()
     }
 
     fun saveAuthToken(token: String) {
@@ -39,8 +43,12 @@ class PreferencesManager @Inject constructor(
         prefs.edit().putString(KEY_AUTH_TOKEN_EXPIRES, date).apply()
     }
 
-    fun saveStudentName(name: String) {
-        prefs.edit().putString(STUDENT_NAME, name).apply()
+    fun savePersonName(name: String) {
+        prefs.edit().putString(PERSON_NAME, name).apply()
+    }
+
+    fun savePersonRole(name: String) {
+        prefs.edit().putString(PERSON_ROLE, name).apply()
     }
 
     fun saveLastUpdateTime(time: Long) {
@@ -51,8 +59,9 @@ class PreferencesManager @Inject constructor(
         const val PREFS_NAME = "niceeljur"
         const val KEY_AUTH_TOKEN = "jwt_token"
         const val KEY_AUTH_TOKEN_EXPIRES = "jwt_token_expires"
-        const val KEY_STUDENT_ID = "student_id"
-        const val STUDENT_NAME = "student_name"
-        const val LAST_UPDATE_TIME = "last_student_info_update"
+        const val KEY_PERSON_ID = "person_id"
+        const val PERSON_NAME = "person_name"
+        const val PERSON_ROLE = "person_role"
+        const val LAST_UPDATE_TIME = "last_person_info_update"
     }
 } 

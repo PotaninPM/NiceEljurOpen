@@ -27,7 +27,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,6 +53,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.common.components.CustomProgressBar
+import com.team.common.components.UserInfoTopBar
 import com.team.common.functions.centerEllipsis
 import com.team.feature_homework.R
 import com.team.feature_homework.presentation.viewmodel.HomeworkItemModel
@@ -58,6 +61,7 @@ import com.team.feature_homework.presentation.viewmodel.HomeworkViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeworkScreen(
     viewModel: HomeworkViewModel = hiltViewModel(),
@@ -69,16 +73,18 @@ fun HomeworkScreen(
         viewModel.loadHomework()
     }
 
-/*    Scaffold(
+    Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Домашние задания") },
+            UserInfoTopBar(
+                personName = uiState.personName,
+                role = uiState.personRole
             )
         }
-    ) { _ ->*/
+    ) { padding ->
         Box(
             modifier = modifier
                 .fillMaxSize()
+                .padding(top = padding.calculateTopPadding())
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -97,7 +103,7 @@ fun HomeworkScreen(
                 )
             }
         }
-    //}
+    }
 }
 
 @Composable
