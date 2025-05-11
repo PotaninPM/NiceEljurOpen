@@ -1,5 +1,6 @@
 package com.team.feature_marks.presentation
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -268,10 +269,21 @@ private fun MarkCard(
     mark: Mark,
     modifier: Modifier = Modifier
 ) {
-    val cardColor = when (mark.value) {
+    val cardColor = when (mark.countas) {
+        "1" -> MaterialTheme.colorScheme.error
+        "1-" -> MaterialTheme.colorScheme.error
+        "1+" -> MaterialTheme.colorScheme.error
         "2" -> MaterialTheme.colorScheme.error
+        "2-" -> MaterialTheme.colorScheme.error
+        "2+" -> MaterialTheme.colorScheme.error
         "3" -> Color(0xFFFFA500).copy(alpha = 0.9f)
+        "3-" -> Color(0xFFFFA500).copy(alpha = 0.9f)
+        "3+" -> Color(0xFFFFA500).copy(alpha = 0.9f)
         "4" -> Color(89, 190, 1, 255).copy(alpha = 0.9f)
+        "4-" -> Color(89, 190, 1, 255).copy(alpha = 0.9f)
+        "4+" -> Color(89, 190, 1, 255).copy(alpha = 0.9f)
+        "5-" -> Color(38, 182, 0, 255).copy(alpha = 0.9f)
+        "5+" -> Color(38, 182, 0, 255).copy(alpha = 0.9f)
         "5" -> Color(38, 182, 0, 255).copy(alpha = 0.9f)
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
