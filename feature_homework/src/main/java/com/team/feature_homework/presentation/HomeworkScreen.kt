@@ -54,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.common.components.CustomProgressBar
 import com.team.common.components.UserInfoTopBar
+import com.team.common.components.icons.BellIcon
+import com.team.common.components.icons.SettingsIcon
 import com.team.common.functions.centerEllipsis
 import com.team.feature_homework.R
 import com.team.feature_homework.presentation.viewmodel.HomeworkItemModel
@@ -74,10 +76,25 @@ fun HomeworkScreen(
     }
 
     Scaffold(
+        modifier = Modifier
+            .padding(top = 4.dp),
         topBar = {
             UserInfoTopBar(
                 personName = uiState.personName,
-                role = uiState.personRole
+                role = uiState.personRole,
+                icons = {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        BellIcon {
+
+                        }
+
+                        SettingsIcon {
+
+                        }
+                    }
+                }
             )
         }
     ) { padding ->
@@ -220,7 +237,7 @@ private fun TopDayBar(
         CustomProgressBar(
             progress = (homework.size).toFloat() / homework.size,
             modifier = Modifier
-                .size(55.dp)
+                .size(50.dp)
         )
     }
 }

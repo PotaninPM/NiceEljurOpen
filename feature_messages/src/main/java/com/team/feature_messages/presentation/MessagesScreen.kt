@@ -1,34 +1,64 @@
 package com.team.feature_messages.presentation
 
-import android.content.Context
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.team.common.components.UserInfoTopBar
+import com.team.common.components.icons.BellIcon
+import com.team.common.components.icons.FilterIcon
 import com.team.feature_messages.data.model.Message
 import com.team.feature_messages.data.model.MessageFolder
 import com.team.feature_messages.presentation.viewmodel.MessagesUiState
@@ -36,52 +66,62 @@ import com.team.feature_messages.presentation.viewmodel.MessagesViewModel
 
 @Composable
 fun MessagesScreen(
-    viewModel: MessagesViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: MessagesViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-
-    val authToken = remember {
-        context.getSharedPreferences("niceeljur", Context.MODE_PRIVATE)
-            .getString("jwt_token", "") ?: ""
-    }
-    
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.loadInitialMessages(authToken)
+        viewModel.loadInitialMessages()
     }
 
     Scaffold(
+        modifier = Modifier
+            .padding(top = 4.dp),
         topBar = {
-            MessagesTopBar(
-                searchQuery = uiState.searchQuery,
-                onSearchQueryChange = { query -> viewModel.onSearchQueryChanged(authToken, query) },
-                unreadOnly = uiState.unreadOnly,
-                onUnreadOnlyChange = { unreadOnly -> viewModel.onUnreadOnlyChanged(authToken, unreadOnly) }
+            UserInfoTopBar(
+                personName = uiState.personName,
+                role = uiState.personRole,
+                icons = {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        BellIcon {
+
+                        }
+
+                        FilterIcon {
+
+                        }
+                    }
+                }
             )
         },
-        modifier = modifier
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding())
         ) {
+            MessagesTopBar(
+                searchQuery = uiState.searchQuery,
+                onSearchQueryChange = { query -> viewModel.onSearchQueryChanged(query) },
+                unreadOnly = uiState.unreadOnly,
+                onUnreadOnlyChange = { unreadOnly -> viewModel.onUnreadOnlyChanged(unreadOnly) }
+            )
+
             MessagesTabs(
                 currentFolder = uiState.currentFolder,
-                onFolderSelected = { folder -> viewModel.onFolderSelected(authToken, folder) }
+                onFolderSelected = { folder -> viewModel.onFolderSelected(folder) }
             )
             
             MessagesContent(
                 uiState = uiState,
-                onLoadMore = { viewModel.loadNextPage(authToken) }
+                onLoadMore = { viewModel.loadNextPage() }
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MessagesTopBar(
     searchQuery: String,
@@ -89,154 +129,65 @@ private fun MessagesTopBar(
     unreadOnly: Boolean,
     onUnreadOnlyChange: (Boolean) -> Unit
 ) {
-    var selectedFilter by remember { mutableStateOf("All") }
+    Column(
+        modifier = Modifier
+            .padding(top = 12.dp)
+    ) {
+        CustomSearchBar(
+            query = searchQuery,
+            onQueryChange = {
+                onSearchQueryChange(it)
+            },
+            onSearch = {
 
-    CustomSearchBar(
-        query = searchQuery,
-        onQueryChange = {
-            onSearchQueryChange(it)
-        },
-        onSearch = {
-
-        },
-        filterOptions = listOf("All", "Unread", "Starred"),
-        selectedFilter = selectedFilter,
-        onFilterSelected = { selectedFilter = it }
-    )
-    /*TopAppBar(
-        title = {
-            CustomSearchBar(
-                query = searchQuery,
-                onQueryChange = onSearchQueryChange,
-                placeholder = "Search messages...",
-                onSearch = {
-
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            )
-        },
-        actions = {
-            IconToggleButton(
-                checked = unreadOnly,
-                onCheckedChange = onUnreadOnlyChange
-            ) {
-                Icon(
-                    imageVector = if (unreadOnly) Icons.Default.Info else Icons.Default.Info,
-                    contentDescription = "Toggle unread only"
-                )
             }
-        }
-    )*/
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
     placeholder: String = "Search…",
     onSearch: () -> Unit = {},
-    filterOptions: List<String> = listOf("All", "Unread", "Starred"),
-    selectedFilter: String = filterOptions.first(),
-    onFilterSelected: (String) -> Unit
 ) {
     var focusState by remember { mutableStateOf(false) }
-    var showFilterPopup by remember { mutableStateOf(false) }
-    val filterIconPosition = remember { mutableStateOf(Offset.Zero) }
 
-    Box(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        TextField(
-            value = query,
-            onValueChange = onQueryChange,
-            placeholder = { Text(placeholder) },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                disabledTextColor = Color.White
+    val imeBottomPx = WindowInsets.ime.getBottom(LocalDensity.current)
+    val imeVisible = imeBottomPx > 0
+
+    TextField(
+        value = query,
+        onValueChange = {
+            onQueryChange(it)
+        },
+        shape = MaterialTheme.shapes.large,
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            disabledTextColor = Color.White
+        ),
+        singleLine = true,
+        placeholder = { Text(placeholder) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(55.dp)
+            .padding(horizontal = 12.dp)
+            .onFocusChanged { focusState = it.isFocused }
+            .border(
+                width = 1.dp,
+                color = if (imeVisible) MaterialTheme.colorScheme.primary else Color.Gray,
+                shape = MaterialTheme.shapes.large
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .onFocusChanged { focusState = it.isFocused }
-                .padding(horizontal = 10.dp),
-            leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            },
-            trailingIcon = {
-                Row {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = { onQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "Filter",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .onGloballyPositioned { coords ->
-                                filterIconPosition.value = coords.localToWindow(Offset.Zero)
-                            }
-                            .clickable { showFilterPopup = !showFilterPopup }
-                    )
-                }
-            }
-        )
-
-        if (showFilterPopup) {
-            Popup(
-                offset = IntOffset(
-                    x = filterIconPosition.value.x.toInt(),
-                    y = (filterIconPosition.value.y + with(LocalDensity.current) { 24.dp.toPx() }).toInt()
-                ),
-                onDismissRequest = { showFilterPopup = false }
-            ) {
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    modifier = Modifier.width(150.dp)
-                ) {
-                    Column {
-                        filterOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    onFilterSelected(option)
-                                    showFilterPopup = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+        leadingIcon = {
+            Icon(Icons.Default.Search, contentDescription = null)
         }
-    }
+    )
 }
-
-
-private fun Modifier.imeAction(
-    imeAction: ImeAction,
-    onAction: () -> Unit
-): Modifier = this.then(
-    Modifier.onKeyEvent {
-        if (it.type == KeyEventType.KeyUp && it.key == Key.Enter) {
-            onAction()
-            true
-        } else false
-    }
-)
-
 
 @Composable
 private fun MessagesTabs(
@@ -261,6 +212,23 @@ private fun MessagesContent(
     uiState: MessagesUiState,
     onLoadMore: () -> Unit
 ) {
+    val listState = rememberLazyListState()
+    
+    LaunchedEffect(listState, uiState) {
+        snapshotFlow {
+            if (listState.layoutInfo.totalItemsCount == 0) return@snapshotFlow false
+            
+            val lastVisibleItem = listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size
+            val threshold = uiState.messages.size - 2
+            lastVisibleItem > threshold
+        }
+        .collect { shouldLoadMore ->
+            if (shouldLoadMore && !uiState.isLoading && uiState.messages.size < uiState.totalMessages) {
+                onLoadMore()
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -271,6 +239,7 @@ private fun MessagesContent(
             )
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
@@ -289,15 +258,6 @@ private fun MessagesContent(
                         ) {
                             CircularProgressIndicator()
                         }
-                    } else if (uiState.messages.size < uiState.totalMessages) {
-                        Button(
-                            onClick = onLoadMore,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                        ) {
-                            Text("Load More")
-                        }
                     }
                 }
             }
@@ -305,7 +265,7 @@ private fun MessagesContent(
 
         if (uiState.error != null) {
             Text(
-                text = uiState.error,
+                text = "Непредвиденная ошибка",
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -322,7 +282,9 @@ private fun MessageItem(message: Message) {
             .fillMaxWidth()
             .padding(bottom = 12.dp),
         elevation = CardDefaults.cardElevation(4.dp),
-        onClick = { /* Handle message click */ }
+        onClick = {
+
+        }
     ) {
         Column(
             modifier = Modifier

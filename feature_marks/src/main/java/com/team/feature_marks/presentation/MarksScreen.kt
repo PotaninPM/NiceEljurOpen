@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.common.components.UserInfoTopBar
+import com.team.common.components.icons.PeriodsIcon
 import com.team.feature_marks.data.model.LessonMarks
 import com.team.feature_marks.data.model.Mark
 import com.team.feature_marks.presentation.viewmodel.MarksDisplayMode
@@ -77,6 +78,8 @@ fun MarksScreen(
     }
 
     Scaffold(
+        modifier = Modifier
+            .padding(top = 4.dp),
         bottomBar = {
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
@@ -100,7 +103,12 @@ fun MarksScreen(
         topBar = {
             UserInfoTopBar(
                 personName = uiState.personName,
-                role = uiState.personRole
+                role = uiState.personRole,
+                icons = {
+                    PeriodsIcon(
+                        "1 полугодие"
+                    )
+                }
             )
         }
     ) { padding ->
@@ -108,6 +116,7 @@ fun MarksScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding())
+                .padding(top = 4.dp)
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -238,7 +247,7 @@ private fun MarksGrid(marks: List<Mark>) {
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // Fill remaining space with empty boxes to maintain grid
+
                 repeat(marksPerRow - rowMarks.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }

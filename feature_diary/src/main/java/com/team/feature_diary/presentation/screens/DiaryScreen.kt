@@ -599,7 +599,7 @@ private fun EmptySchedule() {
 @Composable
 private fun CustomTopAppBar(
     chosenWeek: String,
-    personName: String? = "None",
+    personName: String? = "Student",
     onBellClick: () -> Unit = {},
     onProfileIconClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
@@ -623,12 +623,6 @@ private fun CustomTopAppBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            SettingsIcon(
-                onSettingsClick = {
-
-                }
-            )
-
             BellIcon(
                 onBellClick = {
 
