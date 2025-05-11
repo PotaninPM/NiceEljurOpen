@@ -1,5 +1,7 @@
 package com.team.feature_marks.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class MarksResponseAll(
     val response: MarksResponse
 )
@@ -22,10 +24,10 @@ data class StudentMarks(
 
 data class LessonMarks(
     val average: String?,
-    val averageConvert: Int?,
+    @SerializedName("average_convert") val averageConvert: Int?,
     val colorHex: String?,
     val name: String,
-    val lessonId: String,
+    @SerializedName("lesson_id") val lessonId: String,
     val marks: List<Mark>
 )
 
@@ -35,13 +37,13 @@ data class Mark(
     val colorHex: String?,
     val count: Boolean,
     val comment: String?,
-    val lessonComment: String?,
+    @SerializedName("lesson_comment") val lessonComment: String?,
     val date: String,
     val convert: Int,
-    val lessonId: String?,
+    @SerializedName("lesson_id") val lessonId: String?,
     val nm: String,
     val weight: Int?,
-    val weightFloat: String?,
+    @SerializedName("weight_float") val weightFloat: String?,
     val mtype: MarkType?
 )
 

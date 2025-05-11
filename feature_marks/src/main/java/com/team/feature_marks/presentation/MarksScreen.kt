@@ -1,6 +1,7 @@
 package com.team.feature_marks.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -120,24 +121,14 @@ fun MarksScreen(
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (uiState.error != null) {
-                Text(
-                    text = uiState.error.toString(),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp)
-                )
             } else {
-                Column {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize()
-                    ) { page ->
-                        when (page) {
-                            0 -> SubjectMarksList(marks = uiState.marksBySubject)
-                            1 -> DateMarksList(marksByDate = uiState.marksByDate)
-                        }
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    when (page) {
+                        0 -> SubjectMarksList(marks = uiState.marksBySubject)
+                        1 -> DateMarksList(marksByDate = uiState.marksByDate)
                     }
                 }
             }
@@ -148,7 +139,8 @@ fun MarksScreen(
 @Composable
 private fun SubjectMarksList(marks: List<LessonMarks>) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -178,7 +170,6 @@ private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SubjectMarksCard(lesson: LessonMarks) {
     ElevatedCard(
@@ -187,18 +178,22 @@ private fun SubjectMarksCard(lesson: LessonMarks) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = lesson.name,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f)
                 )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
                 lesson.average?.let { avg ->
                     AverageScoreBadge(average = avg)
                 }
@@ -213,16 +208,27 @@ private fun SubjectMarksCard(lesson: LessonMarks) {
 
 @Composable
 private fun AverageScoreBadge(average: String) {
-    Surface(
+    val borderColor = when {
+        average.toFloat() < 2.5 -> MaterialTheme.colorScheme.error
+        average.toFloat() < 3.5 -> Color(0xFFFFA500)
+        average.toFloat() < 4.5 -> Color(0xFFFFFF00)
+        else -> Color(53, 208, 10, 255)
+    }
+
+    Box(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        color = MaterialTheme.colorScheme.primaryContainer
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.Transparent)
+            .border(
+                width = 2.dp,
+                color = borderColor,
+                shape = MaterialTheme.shapes.medium
+            )
     ) {
         Text(
-            text = "Среднее: $average",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            text = average,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
@@ -234,7 +240,8 @@ private fun MarksGrid(marks: List<Mark>) {
     val rows = marks.chunked(marksPerRow)
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         rows.forEach { rowMarks ->
             Row(
@@ -244,7 +251,7 @@ private fun MarksGrid(marks: List<Mark>) {
                 rowMarks.forEach { mark ->
                     MarkCard(
                         mark = mark,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.size(65.dp)
                     )
                 }
 
@@ -261,27 +268,46 @@ private fun MarkCard(
     mark: Mark,
     modifier: Modifier = Modifier
 ) {
+    val cardColor = when (mark.value) {
+        "2" -> MaterialTheme.colorScheme.error
+        "3" -> Color(0xFFFFA500).copy(alpha = 0.9f)
+        "4" -> Color(89, 190, 1, 255).copy(alpha = 0.9f)
+        "5" -> Color(38, 182, 0, 255).copy(alpha = 0.9f)
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+
     Card(
         modifier = modifier
             .aspectRatio(1f),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = cardColor
         )
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = mark.value,
                 style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.surface,
             )
+
+            if (mark.weightFloat != null) {
+                Text(
+                    text = "x${mark.weightFloat}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.surface,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             
-            mark.mtype?.let { type ->
+            /*mark.mtype?.let { type ->
                 Text(
                     text = type.short,
                     style = MaterialTheme.typography.bodySmall,
@@ -299,7 +325,7 @@ private fun MarkCard(
                     textAlign = TextAlign.Center,
                     maxLines = 2
                 )
-            }
+            }*/
         }
     }
 }
