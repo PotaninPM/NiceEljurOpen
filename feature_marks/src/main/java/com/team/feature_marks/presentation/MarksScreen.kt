@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.team.common.components.UserInfoTopBar
 import com.team.feature_marks.data.model.LessonMarks
 import com.team.feature_marks.data.model.Mark
 import com.team.feature_marks.presentation.viewmodel.MarksDisplayMode
@@ -95,11 +96,18 @@ fun MarksScreen(
                     text = { Text("По датам") }
                 )
             }
+        },
+        topBar = {
+            UserInfoTopBar(
+                personName = uiState.personName,
+                role = uiState.personRole
+            )
         }
     ) { padding ->
         Box(
             modifier = modifier
                 .fillMaxSize()
+                .padding(top = padding.calculateTopPadding())
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))

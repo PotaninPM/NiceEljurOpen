@@ -613,16 +613,16 @@ private fun CustomTopAppBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        UserAvatarCircle(
+            title = personName,
+            onIconClick = onProfileIconClick
+        )
+
         Row(
             modifier = Modifier,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            UserAvatarCircle(
-                title = personName,
-                onIconClick = onProfileIconClick
-            )
-
             SettingsIcon(
                 onSettingsClick = {
 
@@ -634,16 +634,18 @@ private fun CustomTopAppBar(
 
                 }
             )
+
+            WeekChooserList(
+                chosenWeek = chosenWeek,
+                onWeekChosen = { week ->
+                    Log.d("DiaryScreen", "Week chosen: $week")
+                },
+                onCalendarClick = onCalendarClick,
+                periodsInfo = periodsInfo
+            )
         }
 
-        WeekChooserList(
-            chosenWeek = chosenWeek,
-            onWeekChosen = { week ->
-                Log.d("DiaryScreen", "Week chosen: $week")
-            },
-            onCalendarClick = onCalendarClick,
-            periodsInfo = periodsInfo
-        )
+
     }
 }
 

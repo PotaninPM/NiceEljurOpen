@@ -24,6 +24,8 @@ sealed class MarksDisplayMode {
 data class MarksUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
+    val personName: String = "",
+    val personRole: String = "",
     val displayMode: MarksDisplayMode = MarksDisplayMode.BySubject,
     val marksBySubject: List<LessonMarks> = emptyList(),
     val marksByDate: Map<String, List<Mark>> = emptyMap()
@@ -40,21 +42,32 @@ class MarksViewModel @Inject constructor(
 
     fun loadMarks() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-
-            val studentId = preferencesManager.getPersonId()
+            val personId = preferencesManager.getPersonId()
             val authToken = preferencesManager.getAuthToken()
+            val personName = preferencesManager.getPersonName()
+            val personRole = preferencesManager.getPersonRole()
+
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    personName = personName,
+                    personRole = personRole
+                )
+            }
+
+
 
             try {
                 val days = generateDateRange()
                 val response = repository.getMarks(
-                    student = studentId,
+                    student = personId,
                     days = days,
                     authToken = authToken
                 )
 
                 if (response.response.state == 200 && response.response.result != null) {
-                    val student = response.response.result.students[studentId]
+                    val student = response.response.result.students[personId]
 
                     if (student != null) {
                         val marksByDate = student.lessons.flatMap { lesson ->

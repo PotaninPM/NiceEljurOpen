@@ -62,17 +62,17 @@ fun UserInfoTopBar(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             BellIcon(
                 onBellClick = {
-
+                    onBellClick()
                 }
             )
 
             SettingsIcon(
                 onSettingsClick = {
-
+                    onSettingsClick()
                 }
             )
         }
