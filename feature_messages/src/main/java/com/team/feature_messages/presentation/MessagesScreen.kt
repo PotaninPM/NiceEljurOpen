@@ -1,5 +1,6 @@
 package com.team.feature_messages.presentation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +18,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -40,38 +41,43 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.common.components.UserInfoTopBar
 import com.team.common.components.icons.BellIcon
 import com.team.common.components.icons.FilterIcon
+import com.team.common.functions.formatDateTime
+import com.team.feature_messages.R
 import com.team.feature_messages.data.model.Message
 import com.team.feature_messages.data.model.MessageFolder
-import com.team.feature_messages.presentation.viewmodel.MessagesUiState
 import com.team.feature_messages.presentation.viewmodel.MessagesViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun MessagesScreen(
     viewModel: MessagesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val pagerState = rememberPagerState { MessageFolder.entries.size }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.loadInitialMessages()
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.onFolderSelected(MessageFolder.entries[pagerState.currentPage])
     }
 
     Scaffold(
@@ -103,21 +109,61 @@ fun MessagesScreen(
                 .padding(top = padding.calculateTopPadding())
         ) {
             MessagesTopBar(
-                searchQuery = uiState.searchQuery,
+                searchQuery = when (uiState.currentFolder) {
+                    MessageFolder.INBOX -> uiState.inboxState.searchQuery
+                    MessageFolder.SENT -> uiState.sentState.searchQuery
+                },
                 onSearchQueryChange = { query -> viewModel.onSearchQueryChanged(query) },
-                unreadOnly = uiState.unreadOnly,
+                unreadOnly = when (uiState.currentFolder) {
+                    MessageFolder.INBOX -> uiState.inboxState.unreadOnly
+                    MessageFolder.SENT -> uiState.sentState.unreadOnly
+                },
                 onUnreadOnlyChange = { unreadOnly -> viewModel.onUnreadOnlyChanged(unreadOnly) }
             )
 
-            MessagesTabs(
-                currentFolder = uiState.currentFolder,
-                onFolderSelected = { folder -> viewModel.onFolderSelected(folder) }
-            )
-            
-            MessagesContent(
-                uiState = uiState,
-                onLoadMore = { viewModel.loadNextPage() }
-            )
+            TabRow(
+                selectedTabIndex = pagerState.currentPage
+            ) {
+                MessageFolder.entries.forEachIndexed { index, folder ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
+                        text = { Text(folder.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                    )
+                }
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                key = { MessageFolder.entries[it].name }
+            ) { page ->
+                val folder = MessageFolder.entries[page]
+                val folderState = when (folder) {
+                    MessageFolder.INBOX -> uiState.inboxState
+                    MessageFolder.SENT -> uiState.sentState
+                }
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (folderState.messages.isEmpty() && uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        MessagesContent(
+                            messages = folderState.messages,
+                            isLoading = uiState.isLoading,
+                            hasMoreMessages = folderState.messages.size < folderState.totalMessages,
+                            onLoadMore = { viewModel.loadNextPage() },
+                            currentFolder = folder
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -135,12 +181,8 @@ private fun MessagesTopBar(
     ) {
         CustomSearchBar(
             query = searchQuery,
-            onQueryChange = {
-                onSearchQueryChange(it)
-            },
-            onSearch = {
-
-            }
+            onQueryChange = onSearchQueryChange,
+            placeholder = "Поиск сообщений..."
         )
     }
 }
@@ -149,18 +191,22 @@ private fun MessagesTopBar(
 fun CustomSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    placeholder: String = "Search…",
-    onSearch: () -> Unit = {},
+    placeholder: String = "Поиск...",
 ) {
     var focusState by remember { mutableStateOf(false) }
+    var textFieldValue by remember(query) { mutableStateOf(query) }
 
     val imeBottomPx = WindowInsets.ime.getBottom(LocalDensity.current)
     val imeVisible = imeBottomPx > 0
 
+    LaunchedEffect(textFieldValue) {
+        onQueryChange(textFieldValue)
+    }
+
     TextField(
-        value = query,
-        onValueChange = {
-            onQueryChange(it)
+        value = textFieldValue,
+        onValueChange = { newValue ->
+            textFieldValue = newValue
         },
         shape = MaterialTheme.shapes.large,
         colors = TextFieldDefaults.colors(
@@ -172,7 +218,13 @@ fun CustomSearchBar(
             disabledTextColor = Color.White
         ),
         singleLine = true,
-        placeholder = { Text(placeholder) },
+        placeholder = {
+            Text(
+                text = placeholder,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
         modifier = Modifier
             .fillMaxWidth()
             .height(55.dp)
@@ -180,172 +232,202 @@ fun CustomSearchBar(
             .onFocusChanged { focusState = it.isFocused }
             .border(
                 width = 1.dp,
-                color = if (imeVisible) MaterialTheme.colorScheme.primary else Color.Gray,
+                color = if (focusState || imeVisible) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.outline,
                 shape = MaterialTheme.shapes.large
             ),
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = null)
-        }
+            Icon(
+                Icons.Default.Search,
+                contentDescription = "Search",
+                tint = if (focusState || textFieldValue.isNotEmpty())
+                    MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        textStyle = MaterialTheme.typography.bodyLarge
     )
 }
 
 @Composable
-private fun MessagesTabs(
-    currentFolder: MessageFolder,
-    onFolderSelected: (MessageFolder) -> Unit
-) {
-    TabRow(
-        selectedTabIndex = currentFolder.ordinal
-    ) {
-        MessageFolder.entries.forEach { folder ->
-            Tab(
-                selected = folder == currentFolder,
-                onClick = { onFolderSelected(folder) },
-                text = { Text(folder.name.lowercase().replaceFirstChar { it.uppercase() }) }
-            )
-        }
-    }
-}
-
-@Composable
 private fun MessagesContent(
-    uiState: MessagesUiState,
-    onLoadMore: () -> Unit
+    messages: List<Message>,
+    isLoading: Boolean,
+    hasMoreMessages: Boolean,
+    onLoadMore: () -> Unit,
+    currentFolder: MessageFolder
 ) {
     val listState = rememberLazyListState()
-    
-    LaunchedEffect(listState, uiState) {
+
+    LaunchedEffect(listState) {
         snapshotFlow {
             if (listState.layoutInfo.totalItemsCount == 0) return@snapshotFlow false
-            
+
             val lastVisibleItem = listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size
-            val threshold = uiState.messages.size - 2
+            val threshold = messages.size - 2
             lastVisibleItem > threshold
         }
-        .collect { shouldLoadMore ->
-            if (shouldLoadMore && !uiState.isLoading && uiState.messages.size < uiState.totalMessages) {
-                onLoadMore()
+            .collect { shouldLoadMore ->
+                if (shouldLoadMore && !isLoading && hasMoreMessages) {
+                    onLoadMore()
+                }
             }
-        }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        if (uiState.isLoading && uiState.messages.isEmpty()) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center)
+    if (messages.isEmpty() && !isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Сообщений не найдено",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        } else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
-            ) {
-                items(uiState.messages) { message ->
-                    MessageItem(message = message)
-                }
-                
-                item {
-                    if (uiState.isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+        }
+    } else {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
+        ) {
+            items(
+                items = messages,
+                key = { it.id ?: it.hashCode().toString() }
+            ) { message ->
+                MessageItem(
+                    message = message,
+                    currentFolder = currentFolder
+                )
+            }
+
+            item {
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
             }
         }
-
-        if (uiState.error != null) {
-            Text(
-                text = "Непредвиденная ошибка",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp)
-            )
-        }
     }
 }
 
 @Composable
-private fun MessageItem(message: Message) {
+private fun MessageItem(
+    message: Message,
+    currentFolder: MessageFolder = MessageFolder.INBOX
+) {
+    val (date, _) = formatDateTime(message.date)
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .padding(bottom = 10.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         onClick = {
 
         }
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            if (message.unread) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = CircleShape
+                        )
+                )
+            } else {
+                if (currentFolder == MessageFolder.INBOX) {
+                    Spacer(modifier = Modifier.size(8.dp))
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = message.subject ?: "No subject",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = when (currentFolder) {
+                        MessageFolder.INBOX -> buildString {
+                            message.userFrom?.let { user ->
+                                append(user.lastName ?: "")
+                                if (!user.firstName.isNullOrBlank()) {
+                                    if (isNotEmpty()) append(" ")
+                                    append("${user.firstName[0]}.")
+                                }
+
+                                if (!user.middleName.isNullOrBlank()) {
+                                    if (isNotEmpty()) append(" ")
+                                    append("${user.middleName[0]}.")
+                                }
+                            } ?: append("Unknown")
+                        }
+
+                        MessageFolder.SENT -> buildString {
+                            message.usersTo?.get(0)?.let { user ->
+                                append(user.lastName ?: "")
+                                if (!user.firstName.isNullOrBlank()) {
+                                    if (isNotEmpty()) append(" ")
+                                    append("${user.firstName[0]}.")
+                                }
+
+                                if (!user.middleName.isNullOrBlank()) {
+                                    if (isNotEmpty()) append(" ")
+                                    append("${user.middleName[0]}.")
+                                }
+                            } ?: append("Unknown")
+                        }
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    overflow = TextOverflow.Ellipsis
                 )
-                if (message.unread) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ) {
-                        Text("NEW")
+
+                Text(
+                    text = message.subject,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (currentFolder == MessageFolder.SENT) {
+                    message.shortText?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(
-                    text = buildString {
-                        message.userFrom?.let { user ->
-                            append(user.lastName ?: "")
-                            if (!user.firstName.isNullOrBlank()) {
-                                if (isNotEmpty()) append(" ")
-                                append(user.firstName)
-                            }
-                        } ?: append("Unknown")
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = message.date ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (message.withFiles || message.withResources) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                if (message.withFiles || message.withResources) {
                     if (message.withFiles) {
                         Icon(
-                            Icons.Default.Add,
+                            painter = painterResource(id = R.drawable.description_24px),
                             contentDescription = "Has attachments",
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -353,14 +435,21 @@ private fun MessageItem(message: Message) {
                     }
                     if (message.withResources) {
                         Icon(
-                            Icons.Default.Call,
+                            Icons.Default.Face,
                             contentDescription = "Has resources",
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+
+                Text(
+                    text = date,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
-} 
+}
