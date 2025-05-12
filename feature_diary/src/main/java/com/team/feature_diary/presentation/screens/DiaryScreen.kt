@@ -169,7 +169,7 @@ private fun DiaryScreenContent(
             state.weekDiary.let { diary ->
                 val daySchedule = diary.days[selectedDate.format(DateTimeFormatter.BASIC_ISO_DATE)]
 
-                if (daySchedule != null && daySchedule.alert == null) {
+                if (daySchedule != null && (daySchedule.alert == null || daySchedule.alert != "vocation")) {
                     LessonsList(daySchedule = daySchedule, selectedDate = selectedDate)
                 } else {
                     EmptySchedule()
@@ -248,8 +248,8 @@ fun WeekCalendar(
         ) {
             weekDays.forEach { date ->
                 val day = diary?.days?.get(date.format(DateTimeFormatter.BASIC_ISO_DATE))
-                val isVacation = day?.alert != null || date.dayOfWeek.value > 5
-
+                val isVacation = (day?.alert != null && day.alert == "vocation") || date.dayOfWeek.value > 5
+                Log.d("INFOG2", "Day: $day, isVacation: $isVacation")
                 DayItem(
                     isVacation = isVacation,
                     date = date,
