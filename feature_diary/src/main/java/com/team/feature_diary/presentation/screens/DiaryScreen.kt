@@ -249,7 +249,6 @@ fun WeekCalendar(
             weekDays.forEach { date ->
                 val day = diary?.days?.get(date.format(DateTimeFormatter.BASIC_ISO_DATE))
                 val isVacation = (day?.alert != null && day.alert == "vocation") || date.dayOfWeek.value > 5
-                Log.d("INFOG2", "Day: $day, isVacation: $isVacation")
                 DayItem(
                     isVacation = isVacation,
                     date = date,
@@ -351,7 +350,6 @@ private fun LessonsList(daySchedule: DaySchedule, selectedDate: LocalDate) {
         
         items(sortedLessons.size) { index ->
             val (_, lesson) = sortedLessons[index]
-            Log.d("INFOG2", selectedDate.toString())
 
             LessonItem(lesson, selectedDate)
 
@@ -384,7 +382,7 @@ private fun calculateBreakMinutes(endTime: String, startTime: String): Int {
 
 @Composable
 private fun LessonItem(lesson: Lesson, day: LocalDate) {
-    val currentTime = LocalDate.now().minusDays(100)
+    val currentTime = LocalDate.now()
 
     val textColor = if (currentTime.isAfter(day)) {
         Color.Gray

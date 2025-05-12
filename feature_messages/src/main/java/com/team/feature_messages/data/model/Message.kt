@@ -1,24 +1,21 @@
 package com.team.feature_messages.data.model
 
-import com.google.gson.annotations.SerializedName
-
 data class Message(
     val id: String?,
     val subject: String,
-    @SerializedName("short_text") val shortText: String?,
+    val shortText: String?,
     val date: String,
     val unread: Boolean,
-    @SerializedName("with_files") val withFiles: Boolean,
-    @SerializedName("with_resources") val withResources: Boolean,
-    @SerializedName("user_from") val userFrom: UserFrom?,
-    @SerializedName("users_to") val usersTo: List<UserFrom>?
+    val withFiles: Boolean,
+    val withResources: Boolean,
+    val userFrom: UserFrom?
 )
 
 data class UserFrom(
     val name: String,
-    @SerializedName("lastname") val lastName: String?,
-    @SerializedName("firstname") val firstName: String?,
-    @SerializedName("middlename") val middleName: String?
+    val lastName: String?,
+    val firstName: String?,
+    val middleName: String?
 )
 
 data class MessagesResponseInfoAll(

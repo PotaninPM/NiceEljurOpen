@@ -1,6 +1,5 @@
 package com.team.feature_marks.presentation
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +26,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -40,12 +38,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.team.common.components.UserInfoTopBar
@@ -54,6 +55,7 @@ import com.team.feature_marks.data.model.LessonMarks
 import com.team.feature_marks.data.model.Mark
 import com.team.feature_marks.presentation.viewmodel.MarksDisplayMode
 import com.team.feature_marks.presentation.viewmodel.MarksViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -65,6 +67,7 @@ fun MarksScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { 2 })
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.loadMarks()
@@ -82,36 +85,43 @@ fun MarksScreen(
     Scaffold(
         modifier = Modifier
             .padding(top = 4.dp),
-        bottomBar = {
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-            ) {
-                Tab(
-                    selected = pagerState.currentPage == 0,
-                    onClick = {
-
-                    },
-                    text = { Text("По предметам") }
-                )
-                Tab(
-                    selected = pagerState.currentPage == 1,
-                    onClick = { /* Will be handled by pager */ },
-                    text = { Text("По датам") }
-                )
-            }
-        },
         topBar = {
-            UserInfoTopBar(
-                personName = uiState.personName,
-                role = uiState.personRole,
-                icons = {
-                    PeriodsIcon(
-                        "1 полугодие"
+            Column {
+                UserInfoTopBar(
+                    personName = uiState.personName,
+                    role = uiState.personRole,
+                    icons = {
+                        PeriodsIcon(
+                            "1 полугодие"
+                        )
+                    }
+                )
+
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                ) {
+                    Tab(
+                        selected = pagerState.currentPage == 0,
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(0)
+                            }
+                        },
+                        text = { Text("По предметам") }
+                    )
+                    Tab(
+                        selected = pagerState.currentPage == 1,
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(1)
+                            }
+                        },
+                        text = { Text("По датам") }
                     )
                 }
-            )
+            }
         }
     ) { padding ->
         Box(
@@ -179,22 +189,18 @@ private fun SubjectMarksCard(lesson: LessonMarks) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = lesson.name,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
-
-                Spacer(modifier = Modifier.width(4.dp))
-
                 lesson.average?.let { avg ->
                     AverageScoreBadge(average = avg)
                 }
@@ -202,7 +208,62 @@ private fun SubjectMarksCard(lesson: LessonMarks) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            MarksGrid(marks = lesson.marks)
+            MarksGrid(
+                marks = lesson.marks.filter {
+                    it.value != "н" && it.value != "ОП"
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Добавляем отображение пропусков и опозданий
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Пропуски
+                val absences = lesson.marks.filter { it.value == "н" }
+
+                val absencesMarkInfo = absences.firstOrNull().let { mark ->
+                   mark?.copy(
+                        value = "н",
+                        convert = 0,
+                        weightFloat = absences.size.toString(),
+                        lessonComment = null,
+                        mtype = null
+                   )
+                }
+
+                if (absences.isNotEmpty()) {
+                    MarkCard(
+                        mark = absencesMarkInfo ?: absences.first(),
+                        modifier = Modifier.size(65.dp)
+                    )
+                }
+
+                val lateArrivals = lesson.marks.filter { it.value == "ОП" }
+
+                val lateArrivalsMarkInfo = lateArrivals.firstOrNull().let { mark ->
+                    mark?.copy(
+                        value = "ОП",
+                        convert = 0,
+                        weightFloat = lateArrivals.size.toString(),
+                        lessonComment = null,
+                        mtype = null
+                    )
+                }
+
+                if (lateArrivals.isNotEmpty()) {
+                    MarkCard(
+                        mark = lateArrivalsMarkInfo ?: lateArrivals.first(),
+                        modifier = Modifier.size(65.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -247,17 +308,17 @@ private fun MarksGrid(marks: List<Mark>) {
         rows.forEach { rowMarks ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                rowMarks.forEach { mark ->
-                    MarkCard(
-                        mark = mark,
-                        modifier = Modifier.size(65.dp)
-                    )
-                }
-
-                repeat(marksPerRow - rowMarks.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+                (0 until marksPerRow).forEach { index ->
+                    if (index < rowMarks.size) {
+                        MarkCard(
+                            mark = rowMarks[index],
+                            modifier = Modifier.size(65.dp)
+                        )
+                    } else {
+                        Box(modifier = Modifier.size(65.dp))
+                    }
                 }
             }
         }
@@ -266,6 +327,7 @@ private fun MarksGrid(marks: List<Mark>) {
 
 @Composable
 private fun MarkCard(
+    markTypography: TextStyle = MaterialTheme.typography.titleLarge,
     mark: Mark,
     modifier: Modifier = Modifier
 ) {
@@ -293,7 +355,7 @@ private fun MarkCard(
         ) {
             Text(
                 text = mark.value,
-                style = MaterialTheme.typography.titleLarge,
+                style = markTypography,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.surface,
@@ -345,15 +407,9 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
     }
 
     val daysAfterThisText = when (daysBeforeThis) {
-        0 -> {
-            "Сегодня"
-        }
-        1 -> {
-            "Вчера"
-        }
-        else -> {
-            "$daysBeforeThis дней(-я) назад"
-        }
+        0 -> "Сегодня"
+        1 -> "Вчера"
+        else -> "$daysBeforeThis дней(-я) назад"
     }
 
     ElevatedCard(
@@ -367,7 +423,7 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Text(
                 text = formattedDate,
@@ -387,11 +443,12 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            marks.forEach { mark ->
-                MarkInfo(mark = mark)
-
-                if (mark != marks.last()) {
-                    Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                marks.forEach { mark ->
+                    MarkInfo(mark = mark)
                 }
             }
         }
@@ -400,45 +457,40 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
 
 @Composable
 private fun MarkInfo(mark: Mark) {
+    val lessonName = mark.lessonComment?.split(":")?.get(0)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(55.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = mark.value,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-
-                Text(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd),
-                    text = "x${mark.weightFloat}" ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Right
+                MarkCard(
+                    mark = mark,
+                    markTypography = MaterialTheme.typography.titleMedium
                 )
             }
             
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
-                    text = mark.lessonComment ?: "",
+                    text = lessonName ?: "",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 
                 if (mark.mtype != null) {
