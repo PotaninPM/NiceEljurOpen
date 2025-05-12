@@ -36,7 +36,7 @@ data class Mark(
     val countas: String?,
     val colorHex: String?,
     val count: Boolean,
-    val comment: String?,
+    val comment: String,
     @SerializedName("lesson_comment") val lessonComment: String?,
     val date: String,
     val convert: Int,

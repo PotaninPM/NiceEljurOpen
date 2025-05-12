@@ -1,5 +1,6 @@
 package com.team.common.functions
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -15,4 +16,12 @@ fun formatDateTime(input: String): Pair<String, String> {
     val formattedTime = dateTime.format(timeFormatter)
 
     return formattedDate to formattedTime
+}
+
+fun formatDate(input: String): String {
+    val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.US)
+    val date = LocalDate.parse(input, parser)
+
+    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+    return date.format(dateFormatter)
 }

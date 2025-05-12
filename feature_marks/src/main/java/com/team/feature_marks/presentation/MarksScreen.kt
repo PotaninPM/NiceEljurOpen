@@ -2,6 +2,7 @@ package com.team.feature_marks.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,8 +38,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +56,7 @@ import com.team.common.components.UserInfoTopBar
 import com.team.common.components.icons.PeriodsIcon
 import com.team.feature_marks.data.model.LessonMarks
 import com.team.feature_marks.data.model.Mark
+import com.team.feature_marks.presentation.components.MarkInfoDialog
 import com.team.feature_marks.presentation.viewmodel.MarksDisplayMode
 import com.team.feature_marks.presentation.viewmodel.MarksViewModel
 import kotlinx.coroutines.launch
@@ -65,6 +69,7 @@ fun MarksScreen(
     viewModel: MarksViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
+    var selectedMark by remember { mutableStateOf<Mark?>(null) }
     val uiState by viewModel.uiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
@@ -82,87 +87,108 @@ fun MarksScreen(
         )
     }
 
-    Scaffold(
-        modifier = Modifier
-            .padding(top = 4.dp),
-        topBar = {
-            Column {
-                UserInfoTopBar(
-                    personName = uiState.personName,
-                    role = uiState.personRole,
-                    icons = {
-                        PeriodsIcon(
-                            "1 полугодие"
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.padding(top = 4.dp),
+            topBar = {
+                Column {
+                    UserInfoTopBar(
+                        personName = uiState.personName,
+                        role = uiState.personRole,
+                        icons = {
+                            PeriodsIcon("1 полугодие")
+                        }
+                    )
+
+                    TabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                    ) {
+                        Tab(
+                            selected = pagerState.currentPage == 0,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(0)
+                                }
+                            },
+                            text = { Text("По предметам") }
+                        )
+                        Tab(
+                            selected = pagerState.currentPage == 1,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(1)
+                                }
+                            },
+                            text = { Text("По датам") }
                         )
                     }
-                )
-
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                ) {
-                    Tab(
-                        selected = pagerState.currentPage == 0,
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(0)
-                            }
-                        },
-                        text = { Text("По предметам") }
-                    )
-                    Tab(
-                        selected = pagerState.currentPage == 1,
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(1)
-                            }
-                        },
-                        text = { Text("По датам") }
-                    )
+                }
+            }
+        ) { padding ->
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(top = padding.calculateTopPadding())
+                    .padding(top = 4.dp)
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (page) {
+                            0 -> SubjectMarksList(
+                                marks = uiState.marksBySubject,
+                                onMarkClick = { selectedMark = it }
+                            )
+                            1 -> DateMarksList(
+                                marksByDate = uiState.marksByDate,
+                                onMarkClick = { selectedMark = it }
+                            )
+                        }
+                    }
                 }
             }
         }
-    ) { padding ->
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding())
-                .padding(top = 4.dp)
-        ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    when (page) {
-                        0 -> SubjectMarksList(marks = uiState.marksBySubject)
-                        1 -> DateMarksList(marksByDate = uiState.marksByDate)
-                    }
-                }
-            }
+
+        selectedMark?.let { mark ->
+            MarkInfoDialog(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter),
+                mark = mark,
+                onClose = { selectedMark = null }
+            )
         }
     }
 }
 
 @Composable
-private fun SubjectMarksList(marks: List<LessonMarks>) {
+private fun SubjectMarksList(
+    marks: List<LessonMarks>,
+    onMarkClick: (Mark) -> Unit
+) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(marks) { lesson ->
-            SubjectMarksCard(lesson = lesson)
+            SubjectMarksCard(
+                lesson = lesson,
+                onMarkClick = onMarkClick
+            )
         }
     }
 }
 
 @Composable
-private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
+private fun DateMarksList(
+    marksByDate: Map<String, List<Mark>>,
+    onMarkClick: (Mark) -> Unit
+) {
     val sortedDates = remember(marksByDate) {
         marksByDate.keys.sortedDescending()
     }
@@ -175,14 +201,18 @@ private fun DateMarksList(marksByDate: Map<String, List<Mark>>) {
         items(sortedDates) { date ->
             DateMarksCard(
                 date = date,
-                marks = marksByDate[date] ?: emptyList()
+                marks = marksByDate[date] ?: emptyList(),
+                onMarkClick = onMarkClick
             )
         }
     }
 }
 
 @Composable
-private fun SubjectMarksCard(lesson: LessonMarks) {
+private fun SubjectMarksCard(
+    lesson: LessonMarks,
+    onMarkClick: (Mark) -> Unit
+) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -211,7 +241,8 @@ private fun SubjectMarksCard(lesson: LessonMarks) {
             MarksGrid(
                 marks = lesson.marks.filter {
                     it.value != "н" && it.value != "ОП"
-                }
+                },
+                onMarkClick = onMarkClick
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -220,47 +251,41 @@ private fun SubjectMarksCard(lesson: LessonMarks) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Добавляем отображение пропусков и опозданий
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Пропуски
                 val absences = lesson.marks.filter { it.value == "н" }
-
-                val absencesMarkInfo = absences.firstOrNull().let { mark ->
-                   mark?.copy(
-                        value = "н",
-                        convert = 0,
-                        weightFloat = absences.size.toString(),
-                        lessonComment = null,
-                        mtype = null
-                   )
-                }
+                val absencesMarkInfo = absences.firstOrNull()?.copy(
+                    value = "н",
+                    convert = 0,
+                    weightFloat = absences.size.toString(),
+                    lessonComment = null,
+                    mtype = null
+                )
 
                 if (absences.isNotEmpty()) {
                     MarkCard(
                         mark = absencesMarkInfo ?: absences.first(),
-                        modifier = Modifier.size(65.dp)
+                        modifier = Modifier.size(65.dp),
+                        onClick = onMarkClick
                     )
                 }
 
                 val lateArrivals = lesson.marks.filter { it.value == "ОП" }
-
-                val lateArrivalsMarkInfo = lateArrivals.firstOrNull().let { mark ->
-                    mark?.copy(
-                        value = "ОП",
-                        convert = 0,
-                        weightFloat = lateArrivals.size.toString(),
-                        lessonComment = null,
-                        mtype = null
-                    )
-                }
+                val lateArrivalsMarkInfo = lateArrivals.firstOrNull()?.copy(
+                    value = "ОП",
+                    convert = 0,
+                    weightFloat = lateArrivals.size.toString(),
+                    lessonComment = null,
+                    mtype = null
+                )
 
                 if (lateArrivals.isNotEmpty()) {
                     MarkCard(
                         mark = lateArrivalsMarkInfo ?: lateArrivals.first(),
-                        modifier = Modifier.size(65.dp)
+                        modifier = Modifier.size(65.dp),
+                        onClick = onMarkClick
                     )
                 }
             }
@@ -297,7 +322,10 @@ private fun AverageScoreBadge(average: String) {
 }
 
 @Composable
-private fun MarksGrid(marks: List<Mark>) {
+private fun MarksGrid(
+    marks: List<Mark>,
+    onMarkClick: (Mark) -> Unit
+) {
     val marksPerRow = 4
     val rows = marks.chunked(marksPerRow)
 
@@ -314,7 +342,8 @@ private fun MarksGrid(marks: List<Mark>) {
                     if (index < rowMarks.size) {
                         MarkCard(
                             mark = rowMarks[index],
-                            modifier = Modifier.size(65.dp)
+                            modifier = Modifier.size(65.dp),
+                            onClick = onMarkClick
                         )
                     } else {
                         Box(modifier = Modifier.size(65.dp))
@@ -326,76 +355,11 @@ private fun MarksGrid(marks: List<Mark>) {
 }
 
 @Composable
-private fun MarkCard(
-    markTypography: TextStyle = MaterialTheme.typography.titleLarge,
-    mark: Mark,
-    modifier: Modifier = Modifier
+private fun DateMarksCard(
+    date: String,
+    marks: List<Mark>,
+    onMarkClick: (Mark) -> Unit
 ) {
-    val cardColor = when (mark.convert) {
-        1 -> MaterialTheme.colorScheme.error
-        2 -> MaterialTheme.colorScheme.error
-        3 -> Color(0xFFFFA500).copy(alpha = 0.9f)
-        4 -> Color(89, 190, 1, 255).copy(alpha = 0.9f)
-        5 -> Color(38, 182, 0, 255).copy(alpha = 0.9f)
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    Card(
-        modifier = modifier
-            .aspectRatio(1f),
-        colors = CardDefaults.cardColors(
-            containerColor = cardColor
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = mark.value,
-                style = markTypography,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.surface,
-            )
-
-            if (mark.weightFloat != null) {
-                Text(
-                    text = "x${mark.weightFloat}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.surface,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            /*mark.mtype?.let { type ->
-                Text(
-                    text = type.short,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            if (mark.comment != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = mark.comment,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2
-                )
-            }*/
-        }
-    }
-}
-
-@Composable
-private fun DateMarksCard(date: String, marks: List<Mark>) {
     val formattedDate = remember(date) {
         LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             .format(DateTimeFormatter.ofPattern("d MMMM"))
@@ -448,7 +412,10 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 marks.forEach { mark ->
-                    MarkInfo(mark = mark)
+                    MarkInfo(
+                        mark = mark,
+                        onMarkClick = onMarkClick
+                    )
                 }
             }
         }
@@ -456,11 +423,16 @@ private fun DateMarksCard(date: String, marks: List<Mark>) {
 }
 
 @Composable
-private fun MarkInfo(mark: Mark) {
+private fun MarkInfo(
+    mark: Mark,
+    onMarkClick: (Mark) -> Unit
+) {
     val lessonName = mark.lessonComment?.split(":")?.get(0)
-
+    
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onMarkClick(mark) },
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -478,7 +450,8 @@ private fun MarkInfo(mark: Mark) {
             ) {
                 MarkCard(
                     mark = mark,
-                    markTypography = MaterialTheme.typography.titleMedium
+                    markTypography = MaterialTheme.typography.titleMedium,
+                    onClick = onMarkClick
                 )
             }
             
@@ -510,5 +483,75 @@ private fun MarkInfo(mark: Mark) {
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )
+    }
+}
+
+@Composable
+fun MarkCard(
+    markTypography: TextStyle = MaterialTheme.typography.titleLarge,
+    mark: Mark,
+    modifier: Modifier = Modifier,
+    onClick: (Mark) -> Unit
+) {
+    val cardColor = when (mark.convert) {
+        1 -> MaterialTheme.colorScheme.error
+        2 -> MaterialTheme.colorScheme.error
+        3 -> Color(0xFFFFA500).copy(alpha = 0.9f)
+        4 -> Color(89, 190, 1, 255).copy(alpha = 0.9f)
+        5 -> Color(38, 182, 0, 255).copy(alpha = 0.9f)
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    Card(
+        modifier = modifier
+            .aspectRatio(1f)
+            .clickable { onClick(mark) },
+        colors = CardDefaults.cardColors(
+            containerColor = cardColor
+        )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = mark.value,
+                style = markTypography,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.surface,
+            )
+
+            if (mark.weightFloat != null) {
+                Text(
+                    text = "x${mark.weightFloat}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.surface,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            /*mark.mtype?.let { type ->
+                Text(
+                    text = type.short,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            if (mark.comment != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = mark.comment,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2
+                )
+            }*/
+        }
     }
 }
