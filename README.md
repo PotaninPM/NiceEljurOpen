@@ -4,24 +4,19 @@
 
 ## Возможности
 
-<div style="display: flex; flex-wrap: wrap;">
-    <img src="screenshots/diary.png" alt="drawing" style="width: 30%; height: auto; margin-bottom: 10px;"/>
-    <img src="screenshots/messages.png" alt="drawing" style="width: 30%; height: auto; margin-bottom: 10px; margin-left: 10px"/>
-    <img src="screenshots/calculator.png" alt="drawing" style="width: 30%; height: auto; margin-bottom: 10px; margin-left: 10px"/>
+<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+  <img src="https://github.com/user-attachments/assets/0847672c-9c27-48a9-8cb9-4941e2562100" alt="Group 1000002481" style="width: 24%; height: auto; margin-bottom: 10px;" />
+  <img src="https://github.com/user-attachments/assets/7cecdf52-5477-4319-a106-c246e1995eaf" alt="Group 1000002480" style="width: 24%; height: auto; margin-bottom: 10px;" />
+  <img src="https://github.com/user-attachments/assets/cd137117-282a-404e-99ad-f19ca2218262" alt="Group 1000002479" style="width: 24%; height: auto; margin-bottom: 10px;" />
+  <img src="https://github.com/user-attachments/assets/4db19981-9354-4046-bcd8-6f32d96bf9d9" alt="Group 1000002478" style="width: 24%; height: auto; margin-bottom: 10px;" />
 </div>
-<div style="display: flex; flex-wrap: wrap;">
-    <img src="screenshots/marks_by_date.png" alt="drawing" style="width: 30%; height: auto; margin-bottom: 10px;"/>
-    <img src="screenshots/marks_by_subject.png" alt="drawing" style="width: 30%; height: auto; margin-bottom: 10px; margin-left: 10px"/>
-    <img src="screenshots/announcements.png" alt="drawing" style="width: 30%; height: auto; margin-bottom: 10px; margin-left: 10px"/>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+  <img src="https://github.com/user-attachments/assets/5da41bdf-dbc1-491e-bf28-b2c31006d329" alt="Group 1000002477" style="width: 24%; height: auto; margin-bottom: 10px;" />
+  <img src="https://github.com/user-attachments/assets/98d63503-89cb-4d1a-b4c2-a39063c3c538" alt="Group 1000002476" style="width: 24%; height: auto; margin-bottom: 10px;" />
+  <img src="https://github.com/user-attachments/assets/f8505d51-ba93-48ac-afff-102f62a8bccb" alt="Group 1000002475" style="width: 24%; height: auto; margin-bottom: 10px;" />
+  <img src="https://github.com/user-attachments/assets/468f0bf4-8e9a-42c3-9302-0cb7198ccdc7" alt="Group 1000002474" style="width: 24%; height: auto; margin-bottom: 10px;" />
 </div>
-<img width="472" height="839" alt="Group 1000002481" src="https://github.com/user-attachments/assets/0847672c-9c27-48a9-8cb9-4941e2562100" />
-<img width="472" height="839" alt="Group 1000002480" src="https://github.com/user-attachments/assets/7cecdf52-5477-4319-a106-c246e1995eaf" />
-<img width="472" height="839" alt="Group 1000002479" src="https://github.com/user-attachments/assets/cd137117-282a-404e-99ad-f19ca2218262" />
-<img width="472" height="839" alt="Group 1000002478" src="https://github.com/user-attachments/assets/4db19981-9354-4046-bcd8-6f32d96bf9d9" />
-<img width="472" height="839" alt="Group 1000002477" src="https://github.com/user-attachments/assets/5da41bdf-dbc1-491e-bf28-b2c31006d329" />
-<img width="472" height="839" alt="Group 1000002476" src="https://github.com/user-attachments/assets/98d63503-89cb-4d1a-b4c2-a39063c3c538" />
-<img width="472" height="839" alt="Group 1000002475" src="https://github.com/user-attachments/assets/f8505d51-ba93-48ac-afff-102f62a8bccb" />
-<img width="472" height="839" alt="Group 1000002474" src="https://github.com/user-attachments/assets/468f0bf4-8e9a-42c3-9302-0cb7198ccdc7" />
 
 
 ### 📅 Умное расписание
